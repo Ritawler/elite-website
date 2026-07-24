@@ -4,6 +4,8 @@ import Header from "@/components/Header";
 import StaffNoteEditor from "@/components/staff/StaffNoteEditor";
 import StaffFileManager from "@/components/staff/StaffFileManager";
 import DepartmentFileManager from "@/components/staff/DepartmentFileManager";
+import MyTasksList from "@/components/staff/MyTasksList";
+import DepartmentTasksManager from "@/components/staff/DepartmentTasksManager";
 
 export default async function StaffDashboard() {
   const supabase = await createClient();
@@ -15,12 +17,16 @@ export default async function StaffDashboard() {
 
   const { data: profile } = await supabase
     .from("users")
-    .select("full_name, department_id, departments(name)")
+    .select("full_name, department_id")
     .eq("id", user.id)
     .single();
 
   const departmentId = profile?.department_id || null;
-  const departmentName = profile?.departments?.name;
+
+  const { data: departmentRow } = departmentId
+    ? await supabase.from("departments").select("name").eq("id", departmentId).single()
+    : { data: null };
+  const departmentName = departmentRow?.name;
 
   const { data: noteFile } = await supabase.storage
     .from("staff-files")
@@ -36,6 +42,42 @@ export default async function StaffDashboard() {
         sortBy: { column: "updated_at", order: "desc" },
       })
     : { data: [] };
+
+  const { data: myTasks } = await supabase
+    .from("department_tasks")
+    .select("id, title, description, due_date, is_done")
+    .eq("assigned_to", user.id)
+    .order("due_date", { ascending: true });
+
+  const { data: managedDepartments } = await supabase
+    .from("departments")
+    .select("id, name")
+    .eq("manager_id", user.id);
+
+  const managedSections = [];
+  for (const dept of managedDepartments || []) {
+    const { data: members } = await supabase
+      .from("users")
+      .select("id, full_name, email")
+      .eq("department_id", dept.id)
+      .eq("role", "staff");
+
+    const { data: createdTasks } = await supabase
+      .from("department_tasks")
+      .select("id, title, is_done, assigned_to, member:users!department_tasks_assigned_to_fkey(full_name, email)")
+      .eq("department_id", dept.id)
+      .eq("created_by", user.id)
+      .order("created_at", { ascending: false });
+
+    managedSections.push({
+      department: dept,
+      members: members || [],
+      createdTasks: (createdTasks || []).map((t) => ({
+        ...t,
+        assignee_name: t.member?.full_name || t.member?.email,
+      })),
+    });
+  }
 
   return (
     <>
@@ -57,6 +99,22 @@ export default async function StaffDashboard() {
             <DepartmentFileManager departmentId={departmentId} initialFiles={departmentFiles || []} />
           </div>
         )}
+
+        <div className="dash-section">
+          <h2>مهامي</h2>
+          <MyTasksList initialTasks={myTasks || []} />
+        </div>
+
+        {managedSections.map(({ department, members, createdTasks }) => (
+          <div className="dash-section" key={department.id}>
+            <DepartmentTasksManager
+              department={department}
+              members={members}
+              createdTasks={createdTasks}
+              currentUserId={user.id}
+            />
+          </div>
+        ))}
       </div>
     </>
   );

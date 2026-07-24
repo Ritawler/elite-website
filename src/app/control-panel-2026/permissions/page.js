@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import Header from "@/components/Header";
 import AdminPermissionsList from "@/components/admin/AdminPermissionsList";
 import ManageDepartmentsForm from "@/components/admin/ManageDepartmentsForm";
+import DepartmentManagerList from "@/components/admin/DepartmentManagerList";
 
 export default async function AdminPermissionsPage() {
   const supabase = await createClient();
@@ -14,8 +15,10 @@ export default async function AdminPermissionsPage() {
 
   const { data: departments } = await supabase
     .from("departments")
-    .select("id, name")
+    .select("id, name, manager_id")
     .order("name", { ascending: true });
+
+  const staffUsers = (users || []).filter((u) => u.role === "staff");
 
   return (
     <>
@@ -30,6 +33,12 @@ export default async function AdminPermissionsPage() {
         <div className="dash-section">
           <h2>الأقسام</h2>
           <ManageDepartmentsForm />
+        </div>
+
+        <div className="dash-section">
+          <h2>مسؤول كل قسم</h2>
+          <p>مسؤول القسم يقدر يضيف مهام لأعضاء قسمه فقط</p>
+          <DepartmentManagerList initialDepartments={departments || []} staffUsers={staffUsers} />
         </div>
 
         <div className="dash-section">
