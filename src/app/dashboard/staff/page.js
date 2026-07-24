@@ -30,7 +30,7 @@ export default async function StaffDashboard() {
 
   const { data: noteFile } = await supabase.storage
     .from("staff-files")
-    .download(`${user.id}/note.txt`);
+    .download(`${user.id}/note.html`);
   const noteContent = noteFile ? await noteFile.text() : "";
 
   const { data: files } = await supabase.storage.from("staff-files").list(user.id, {

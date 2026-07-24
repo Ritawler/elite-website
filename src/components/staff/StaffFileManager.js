@@ -12,7 +12,7 @@ function formatSize(bytes) {
 
 export default function StaffFileManager({ userId, initialFiles, departmentId }) {
   const supabase = createClient();
-  const [files, setFiles] = useState(initialFiles.filter((f) => f.name !== "note.txt"));
+  const [files, setFiles] = useState(initialFiles.filter((f) => f.name !== "note.html"));
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState("");
   const [shareStatus, setShareStatus] = useState("");
