@@ -1,15 +1,21 @@
 import { createClient } from "@/lib/supabase/server";
 import Header from "@/components/Header";
 import AdminPermissionsList from "@/components/admin/AdminPermissionsList";
+import ManageDepartmentsForm from "@/components/admin/ManageDepartmentsForm";
 
 export default async function AdminPermissionsPage() {
   const supabase = await createClient();
 
   const { data: users } = await supabase
     .from("users")
-    .select("id, full_name, email, role, can_approve_trainers, can_manage_member_topics")
+    .select("id, full_name, email, role, department_id, can_approve_trainers, can_manage_member_topics")
     .neq("role", "admin")
     .order("full_name", { ascending: true });
+
+  const { data: departments } = await supabase
+    .from("departments")
+    .select("id, name")
+    .order("name", { ascending: true });
 
   return (
     <>
@@ -17,12 +23,17 @@ export default async function AdminPermissionsPage() {
       <div className="dashboard-wrap">
         <h1>إدارة الصلاحيات</h1>
         <p>
-          غيّر دور أي حساب مباشرة (مثلاً تعيين staff)، وامنح صلاحيات "الموافقة على طلبات المدربين" أو
-          "إدارة مواضيع الأعضاء" بدون إعطاء صلاحيات أدمن كاملة
+          غيّر دور أي حساب مباشرة (مثلاً تعيين staff)، عيّن قسم كل موظف، وامنح صلاحيات "الموافقة على طلبات
+          المدربين" أو "إدارة مواضيع الأعضاء" بدون إعطاء صلاحيات أدمن كاملة
         </p>
 
         <div className="dash-section">
-          <AdminPermissionsList initialUsers={users || []} />
+          <h2>الأقسام</h2>
+          <ManageDepartmentsForm />
+        </div>
+
+        <div className="dash-section">
+          <AdminPermissionsList initialUsers={users || []} departments={departments || []} />
         </div>
       </div>
     </>

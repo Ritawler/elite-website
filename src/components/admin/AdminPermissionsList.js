@@ -5,7 +5,7 @@ import { createClient } from "@/lib/supabase/client";
 
 const ROLES = ["student", "trainer", "staff", "admin"];
 
-export default function AdminPermissionsList({ initialUsers }) {
+export default function AdminPermissionsList({ initialUsers, departments }) {
   const supabase = createClient();
   const [users, setUsers] = useState(initialUsers);
   const [busyId, setBusyId] = useState(null);
@@ -48,6 +48,18 @@ export default function AdminPermissionsList({ initialUsers }) {
     }
   }
 
+  async function changeDepartment(userId, deptId) {
+    setBusyId(userId);
+    const { error } = await supabase.rpc("set_user_department", {
+      target_user_id: userId,
+      dept_id: deptId || null,
+    });
+    setBusyId(null);
+    if (!error) {
+      setUsers((prev) => prev.map((u) => (u.id === userId ? { ...u, department_id: deptId || null } : u)));
+    }
+  }
+
   if (users.length === 0) {
     return <p className="dash-empty">ما فيه مستخدمين.</p>;
   }
@@ -76,6 +88,27 @@ export default function AdminPermissionsList({ initialUsers }) {
                 </option>
               ))}
             </select>
+
+            {u.role === "staff" && (
+              <select
+                value={u.department_id || ""}
+                disabled={busyId === u.id}
+                onChange={(e) => changeDepartment(u.id, e.target.value)}
+                style={{
+                  padding: "8px 12px",
+                  borderRadius: "8px",
+                  border: "1.5px solid var(--border)",
+                  fontFamily: "'Cairo', sans-serif",
+                }}
+              >
+                <option value="">بدون قسم</option>
+                {departments.map((d) => (
+                  <option key={d.id} value={d.id}>
+                    {d.name}
+                  </option>
+                ))}
+              </select>
+            )}
 
             {u.can_approve_trainers ? (
               <button
