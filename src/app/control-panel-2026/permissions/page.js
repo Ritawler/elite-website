@@ -7,7 +7,7 @@ export default async function AdminPermissionsPage() {
 
   const { data: users } = await supabase
     .from("users")
-    .select("id, full_name, email, role, can_approve_trainers")
+    .select("id, full_name, email, role, can_approve_trainers, can_manage_member_topics")
     .neq("role", "admin")
     .order("full_name", { ascending: true });
 
@@ -16,7 +16,10 @@ export default async function AdminPermissionsPage() {
       <Header />
       <div className="dashboard-wrap">
         <h1>إدارة الصلاحيات</h1>
-        <p>امنح صلاحية "الموافقة على طلبات المدربين" لأي حساب بدون إعطائه صلاحيات أدمن كاملة</p>
+        <p>
+          غيّر دور أي حساب مباشرة (مثلاً تعيين staff)، وامنح صلاحيات "الموافقة على طلبات المدربين" أو
+          "إدارة مواضيع الأعضاء" بدون إعطاء صلاحيات أدمن كاملة
+        </p>
 
         <div className="dash-section">
           <AdminPermissionsList initialUsers={users || []} />

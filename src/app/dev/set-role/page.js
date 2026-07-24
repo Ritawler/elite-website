@@ -71,6 +71,9 @@ export default function DevSetRolePage() {
           <button className="btn btn-outline" disabled={loading} onClick={() => setOwnRole("trainer")}>
             trainer
           </button>
+          <button className="btn btn-outline" disabled={loading} onClick={() => setOwnRole("staff")}>
+            staff
+          </button>
           <button className="btn btn-outline" disabled={loading} onClick={() => setOwnRole("admin")}>
             admin
           </button>

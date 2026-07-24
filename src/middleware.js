@@ -61,6 +61,9 @@ export async function middleware(request) {
       if (pathname.startsWith("/dashboard/trainer") && role !== "trainer") {
         return NextResponse.redirect(new URL(`/dashboard/${role}`, request.url));
       }
+      if (pathname.startsWith("/dashboard/staff") && role !== "staff") {
+        return NextResponse.redirect(new URL(`/dashboard/${role}`, request.url));
+      }
     }
   }
 

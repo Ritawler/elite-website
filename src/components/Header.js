@@ -11,6 +11,7 @@ export default function Header() {
   const [user, setUser] = useState(undefined); // undefined = still checking, null = logged out
   const [canReview, setCanReview] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [canManageTopics, setCanManageTopics] = useState(false);
 
   useEffect(() => {
     async function loadUser() {
@@ -19,14 +20,16 @@ export default function Header() {
       if (data.user) {
         const { data: profile } = await supabase
           .from("users")
-          .select("role, can_approve_trainers")
+          .select("role, can_approve_trainers, can_manage_member_topics")
           .eq("id", data.user.id)
           .single();
         setCanReview(profile?.role === "admin" || profile?.can_approve_trainers === true);
         setIsAdmin(profile?.role === "admin");
+        setCanManageTopics(profile?.role === "admin" || profile?.can_manage_member_topics === true);
       } else {
         setCanReview(false);
         setIsAdmin(false);
+        setCanManageTopics(false);
       }
     }
     loadUser();
@@ -36,6 +39,7 @@ export default function Header() {
       if (!session?.user) {
         setCanReview(false);
         setIsAdmin(false);
+        setCanManageTopics(false);
       }
     });
 
@@ -115,6 +119,11 @@ export default function Header() {
                 تواصل معنا
               </a>
             </li>
+            <li>
+              <Link href="/topics" className="nav-link">
+                مواضيع الأعضاء
+              </Link>
+            </li>
           </ul>
         </nav>
 
@@ -129,6 +138,11 @@ export default function Header() {
               {canReview && (
                 <Link href="/reviews/trainer-requests" className="btn btn-outline login-btn">
                   مراجعة الطلبات
+                </Link>
+              )}
+              {canManageTopics && (
+                <Link href="/manage/member-topics" className="btn btn-outline login-btn">
+                  إدارة المواضيع
                 </Link>
               )}
               <Link href="/dashboard" className="btn btn-outline login-btn">
