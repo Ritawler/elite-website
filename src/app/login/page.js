@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 
@@ -16,6 +16,17 @@ export default function LoginPage() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [loading, setLoading] = useState(false);
+
+  // Surfaces errors that /auth/callback redirects back with (e.g. Google
+  // sign-in failures) — temporary diagnostic, shows the raw message so we
+  // can see exactly where the OAuth flow breaks.
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const callbackError = params.get("error");
+    if (callbackError) {
+      setError(`خطأ من عملية تسجيل الدخول: ${callbackError}`);
+    }
+  }, []);
 
   async function goToDashboard(userId) {
     const { data: profile } = await supabase
