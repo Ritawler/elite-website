@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import Header from "@/components/Header";
 import CourseComments from "@/components/dashboard/CourseComments";
 import CourseMessageThread from "@/components/dashboard/CourseMessageThread";
+import TrainerRequestBox from "@/components/dashboard/TrainerRequestBox";
 
 export default async function StudentDashboard() {
   const supabase = await createClient();
@@ -48,6 +49,14 @@ export default async function StudentDashboard() {
         .in("course_id", courseIds)
         .order("created_at", { ascending: true })
     : { data: [] };
+
+  const { data: trainerRequest } = await supabase
+    .from("trainer_requests")
+    .select("id, status")
+    .eq("student_id", user.id)
+    .order("requested_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
 
   return (
     <>
@@ -124,6 +133,13 @@ export default async function StudentDashboard() {
             </div>
           )}
         </div>
+
+        <TrainerRequestBox
+          studentId={user.id}
+          studentName={studentName}
+          studentEmail={user.email}
+          initialRequest={trainerRequest}
+        />
       </div>
     </>
   );

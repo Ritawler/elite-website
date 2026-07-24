@@ -9,12 +9,28 @@ export default function Header() {
   const router = useRouter();
   const supabase = createClient();
   const [user, setUser] = useState(undefined); // undefined = still checking, null = logged out
+  const [canReview, setCanReview] = useState(false);
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => setUser(data.user));
+    async function loadUser() {
+      const { data } = await supabase.auth.getUser();
+      setUser(data.user);
+      if (data.user) {
+        const { data: profile } = await supabase
+          .from("users")
+          .select("role, can_approve_trainers")
+          .eq("id", data.user.id)
+          .single();
+        setCanReview(profile?.role === "admin" || profile?.can_approve_trainers === true);
+      } else {
+        setCanReview(false);
+      }
+    }
+    loadUser();
 
     const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null);
+      if (!session?.user) setCanReview(false);
     });
 
     return () => listener.subscription.unsubscribe();
@@ -99,6 +115,11 @@ export default function Header() {
         <div className="header-actions">
           {user === undefined ? null : user ? (
             <>
+              {canReview && (
+                <Link href="/reviews/trainer-requests" className="btn btn-outline login-btn">
+                  مراجعة الطلبات
+                </Link>
+              )}
               <Link href="/dashboard" className="btn btn-outline login-btn">
                 {displayName}
               </Link>
