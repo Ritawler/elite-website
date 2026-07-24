@@ -58,10 +58,6 @@ export default async function PaymentSuccessPage({ searchParams }) {
                 ما قدرنا نأكد عملية الدفع فوراً. لو تم خصم المبلغ فعلاً، بيتأكد اشتراكك تلقائياً خلال دقائق —
                 راجع لوحة التحكم بعد شوي. لو استمرت المشكلة، تواصل معنا.
               </p>
-              {/* Temporary diagnostic — remove once the mock-mode flow is confirmed stable in production. */}
-              <p className="auth-subtitle" style={{ fontSize: 11, opacity: 0.6 }}>
-                debug: {outcome.reason || "unknown"} — {JSON.stringify(outcome.debug || {})}
-              </p>
               <a href="/dashboard/student" className="btn btn-outline auth-submit">
                 الذهاب للوحة التحكم
               </a>
