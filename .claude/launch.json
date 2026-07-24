@@ -2,10 +2,10 @@
   "version": "0.0.1",
   "configurations": [
     {
-      "name": "elite-static",
-      "runtimeExecutable": "C:\\Users\\user\\AppData\\Local\\Programs\\Python\\Python313\\python.exe",
-      "runtimeArgs": ["-m", "http.server", "5500"],
-      "port": 5500
+      "name": "elite-nextjs",
+      "runtimeExecutable": "C:\\Program Files\\nodejs\\node.exe",
+      "runtimeArgs": ["C:\\Users\\user\\Desktop\\elite-website\\node_modules\\next\\dist\\bin\\next", "dev"],
+      "port": 3000
     }
   ]
 }

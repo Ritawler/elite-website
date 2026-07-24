@@ -1,53 +1,4 @@
-<!DOCTYPE html>
-<html lang="ar" dir="rtl">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title data-ar="إيليت للأبحاث التجريبية والتطوير في علم النفس | ELITE" data-en="ELITE for Experimental Research and Development in Psychology">إيليت للأبحاث التجريبية والتطوير في علم النفس | ELITE</title>
-<meta name="description" content="إيليت (ELITE) منظمة تدريبية كويتية متخصصة في الدورات النفسية والتربوية والتطوير الذاتي، معتمدة للتطوير المهني المستمر CPD." data-ar-content="إيليت (ELITE) منظمة تدريبية كويتية متخصصة في الدورات النفسية والتربوية والتطوير الذاتي، معتمدة للتطوير المهني المستمر CPD." data-en-content="ELITE is a Kuwaiti training organization specialized in psychological, educational, and personal development courses, accredited for Continuing Professional Development (CPD).">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="assets/css/style.css">
-</head>
-<body>
-
-<!-- ===== Header ===== -->
-<header class="site-header" id="site-header">
-  <div class="container header-inner">
-    <a href="#home" class="brand">
-      <img src="logo.png" alt="ELITE Logo" class="brand-logo" onerror="this.style.display='none'; this.parentElement.classList.add('logo-fallback')">
-      <span class="brand-text">
-        <strong data-ar="إيليت" data-en="ELITE">إيليت</strong>
-        <small data-ar="للأبحاث التجريبية والتطوير في علم النفس" data-en="Research &amp; Development in Psychology">للأبحاث التجريبية والتطوير في علم النفس</small>
-      </span>
-    </a>
-
-    <nav class="main-nav" id="main-nav">
-      <ul>
-        <li><a href="#home" class="nav-link" data-ar="الرئيسية" data-en="Home">الرئيسية</a></li>
-        <li><a href="#about" class="nav-link" data-ar="عن إيليت" data-en="About">عن إيليت</a></li>
-        <li><a href="#team" class="nav-link" data-ar="الأعضاء" data-en="Members">الأعضاء</a></li>
-        <li><a href="#courses" class="nav-link" data-ar="الدورات" data-en="Courses">الدورات</a></li>
-        <li><a href="#cpd" class="nav-link" data-ar="الاعتماد المهني" data-en="CPD">الاعتماد المهني</a></li>
-        <li><a href="#events" class="nav-link" data-ar="الفعاليات" data-en="Events">الفعاليات</a></li>
-        <li><a href="#podcast" class="nav-link" data-ar="استبصار" data-en="Estibsar">استبصار</a></li>
-        <li><a href="#blog" class="nav-link" data-ar="المدونة" data-en="Blog">المدونة</a></li>
-        <li><a href="#contact" class="nav-link" data-ar="تواصل معنا" data-en="Contact">تواصل معنا</a></li>
-      </ul>
-    </nav>
-
-    <div class="header-actions">
-      <button class="lang-switch" id="lang-switch" type="button" aria-label="Switch language">
-        <span id="lang-switch-label">EN</span>
-      </button>
-      <button class="hamburger" id="hamburger" type="button" aria-label="Menu" aria-expanded="false">
-        <span></span><span></span><span></span>
-      </button>
-    </div>
-  </div>
-</header>
-
+export const homeSections = `
 <!-- ===== Hero / Home ===== -->
 <section class="hero" id="home">
   <div class="hero-bg" aria-hidden="true"></div>
@@ -406,7 +357,7 @@
 <footer class="site-footer">
   <div class="container footer-inner">
     <div class="footer-brand">
-      <img src="logo.png" alt="ELITE Logo" class="footer-logo" onerror="this.style.display='none'">
+      <img src="/logo.png" alt="ELITE Logo" class="footer-logo">
       <div>
         <strong data-ar="إيليت" data-en="ELITE">إيليت</strong>
         <p data-ar="للأبحاث التجريبية والتطوير في علم النفس" data-en="Research &amp; Development in Psychology">للأبحاث التجريبية والتطوير في علم النفس</p>
@@ -430,7 +381,6 @@
       <a href="https://tiktok.com/@eliteco.kw" target="_blank" rel="noopener" aria-label="TikTok"><svg viewBox="0 0 24 24"><path d="M16.6 2c.3 1.8 1.5 3.3 3.4 3.8v2.7a6.3 6.3 0 0 1-3.4-1v6.8a5.7 5.7 0 1 1-5.7-5.7c.3 0 .6 0 .9.1v2.8a2.9 2.9 0 1 0 2 2.8V2h2.8Z"/></svg></a>
       <a href="https://x.com/eliteco_kw" target="_blank" rel="noopener" aria-label="X"><svg viewBox="0 0 24 24"><path d="M3 3h4.2l4 5.5L15.8 3H20l-6.6 8.5L20.4 21H16l-4.4-6-5 6H2.6l6.9-8.7L3 3Z"/></svg></a>
       <a href="https://youtube.com/@elite.company-23" target="_blank" rel="noopener" aria-label="YouTube"><svg viewBox="0 0 24 24"><path d="M23 12s0-3.6-.5-5.3c-.3-1-1-1.8-2-2C18.9 4 12 4 12 4s-6.9 0-8.5.7c-1 .2-1.7 1-2 2C1 8.4 1 12 1 12s0 3.6.5 5.3c.3 1 1 1.7 2 2C5.1 20 12 20 12 20s6.9 0 8.5-.7c1-.3 1.7-1 2-2 .5-1.7.5-5.3.5-5.3ZM9.8 15.3V8.7L15.8 12l-6 3.3Z"/></svg></a>
-      <a href="https://www.linkedin.com/company/elitekuwait/" target="_blank" rel="noopener" aria-label="LinkedIn"><svg viewBox="0 0 24 24"><path d="M4.98 3.5a2.5 2.5 0 1 1 0 5 2.5 2.5 0 0 1 0-5ZM3 9h4v12H3V9Zm7 0h3.8v1.7h.05c.53-1 1.83-2.05 3.77-2.05 4.03 0 4.78 2.65 4.78 6.1V21h-4v-5.3c0-1.27-.02-2.9-1.77-2.9-1.77 0-2.04 1.38-2.04 2.8V21h-4V9Z"/></svg></a>
       <a href="mailto:eliteco.kw@gmail.com" aria-label="Email"><svg viewBox="0 0 24 24"><path d="M2 5.5A2.5 2.5 0 0 1 4.5 3h15A2.5 2.5 0 0 1 22 5.5v13a2.5 2.5 0 0 1-2.5 2.5h-15A2.5 2.5 0 0 1 2 18.5v-13Zm2.2.3 7.8 6 7.8-6H4.2Zm15.8 1.6-7.6 5.8a1 1 0 0 1-1.2 0L3.6 7.4V18.5c0 .3.2.5.5.5h15c.3 0 .5-.2.5-.5V7.4Z"/></svg></a>
     </div>
   </div>
@@ -443,7 +393,4 @@
 <a href="https://wa.me/96566676092" target="_blank" rel="noopener" class="whatsapp-float" aria-label="WhatsApp">
   <svg viewBox="0 0 24 24"><path d="M20.5 3.5A11 11 0 0 0 3 17.4L2 22l4.7-1.2A11 11 0 1 0 20.5 3.5Zm-8.5 17a9 9 0 0 1-4.6-1.3l-.3-.2-3 .8.8-2.9-.2-.3A9 9 0 1 1 12 20.5Zm5-6.7c-.3-.1-1.6-.8-1.8-.9-.2-.1-.4-.1-.6.1-.2.3-.7.9-.8 1-.2.2-.3.2-.5.1-.3-.1-1.2-.4-2.2-1.4-.8-.7-1.4-1.6-1.5-1.9-.2-.3 0-.5.1-.6l.4-.5c.1-.2.2-.3.2-.5.1-.2 0-.4 0-.5-.1-.1-.6-1.5-.8-2-.2-.5-.4-.4-.6-.4h-.5c-.2 0-.5.1-.7.3-.2.3-.9.9-.9 2.2s1 2.5 1.1 2.7c.1.2 2 3.1 4.9 4.3.7.3 1.2.5 1.6.6.7.2 1.3.2 1.8.1.5-.1 1.6-.7 1.9-1.3.2-.6.2-1.1.2-1.3-.1-.1-.3-.2-.5-.3Z"/></svg>
 </a>
-
-<script src="assets/js/main.js"></script>
-</body>
-</html>
+`;
