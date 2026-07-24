@@ -10,14 +10,23 @@ import { checkPaymentStatus } from "@/lib/upayments";
 export async function confirmPayment({ orderId, trackId }) {
   const admin = createAdminClient();
 
-  const { data: payment } = await admin
+  const { data: payment, error: lookupError } = await admin
     .from("payments")
     .select("id, student_id, course_id, order_id, track_id, amount, status")
     .eq("order_id", orderId)
     .single();
 
   if (!payment) {
-    return { ok: false, reason: "payment_not_found" };
+    // Temporary diagnostic — remove once confirmed stable in production.
+    return {
+      ok: false,
+      reason: "payment_not_found",
+      debug: {
+        hasServiceRoleKey: Boolean(process.env.SUPABASE_SERVICE_ROLE_KEY),
+        keyLength: (process.env.SUPABASE_SERVICE_ROLE_KEY || "").length,
+        lookupError: lookupError?.message,
+      },
+    };
   }
 
   if (payment.status === "paid") {

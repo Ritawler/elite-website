@@ -60,7 +60,7 @@ export default async function PaymentSuccessPage({ searchParams }) {
               </p>
               {/* Temporary diagnostic — remove once the mock-mode flow is confirmed stable in production. */}
               <p className="auth-subtitle" style={{ fontSize: 11, opacity: 0.6 }}>
-                debug: {outcome.reason || "unknown"}
+                debug: {outcome.reason || "unknown"} — {JSON.stringify(outcome.debug || {})}
               </p>
               <a href="/dashboard/student" className="btn btn-outline auth-submit">
                 الذهاب للوحة التحكم
