@@ -65,6 +65,10 @@ export default async function StudentDashboard() {
         <h1>مرحباً {studentName} 👋</h1>
         <p>لوحة تحكم المتدرّب</p>
 
+        <a href="/courses" className="btn btn-outline">
+          تصفّح الدورات المتاحة
+        </a>
+
         <div className="dash-section">
           <h2>دوراتي</h2>
           {!enrollments || enrollments.length === 0 ? (
