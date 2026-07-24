@@ -16,5 +16,6 @@ export default async function DashboardRedirect() {
     .single();
 
   if (!profile?.role_selected) redirect("/auth/select-role");
+  if (profile.role === "admin") redirect("/control-panel-2026");
   redirect(`/dashboard/${profile.role}`);
 }

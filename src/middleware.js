@@ -32,12 +32,13 @@ export async function middleware(request) {
   const { pathname } = request.nextUrl;
   const isDashboard = pathname.startsWith("/dashboard");
   const isSelectRole = pathname.startsWith("/auth/select-role");
+  const isAdminPanel = pathname.startsWith("/control-panel-2026");
 
-  if ((isDashboard || isSelectRole) && !user) {
+  if ((isDashboard || isSelectRole || isAdminPanel) && !user) {
     return NextResponse.redirect(new URL("/login", request.url));
   }
 
-  if ((isDashboard || isSelectRole) && user) {
+  if ((isDashboard || isSelectRole || isAdminPanel) && user) {
     const { data: profile } = await supabase
       .from("users")
       .select("role, role_selected")
@@ -46,6 +47,10 @@ export async function middleware(request) {
 
     if (!profile?.role_selected && !isSelectRole) {
       return NextResponse.redirect(new URL("/auth/select-role", request.url));
+    }
+
+    if (isAdminPanel && profile?.role !== "admin") {
+      return NextResponse.redirect(new URL("/dashboard", request.url));
     }
 
     if (isDashboard && profile?.role_selected) {
@@ -63,5 +68,5 @@ export async function middleware(request) {
 }
 
 export const config = {
-  matcher: ["/dashboard/:path*", "/auth/select-role"],
+  matcher: ["/dashboard/:path*", "/auth/select-role", "/control-panel-2026/:path*"],
 };

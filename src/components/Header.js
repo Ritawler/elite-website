@@ -10,6 +10,7 @@ export default function Header() {
   const supabase = createClient();
   const [user, setUser] = useState(undefined); // undefined = still checking, null = logged out
   const [canReview, setCanReview] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
     async function loadUser() {
@@ -22,15 +23,20 @@ export default function Header() {
           .eq("id", data.user.id)
           .single();
         setCanReview(profile?.role === "admin" || profile?.can_approve_trainers === true);
+        setIsAdmin(profile?.role === "admin");
       } else {
         setCanReview(false);
+        setIsAdmin(false);
       }
     }
     loadUser();
 
     const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null);
-      if (!session?.user) setCanReview(false);
+      if (!session?.user) {
+        setCanReview(false);
+        setIsAdmin(false);
+      }
     });
 
     return () => listener.subscription.unsubscribe();
@@ -115,6 +121,11 @@ export default function Header() {
         <div className="header-actions">
           {user === undefined ? null : user ? (
             <>
+              {isAdmin && (
+                <Link href="/control-panel-2026" className="btn btn-outline login-btn">
+                  لوحة الأدمن
+                </Link>
+              )}
               {canReview && (
                 <Link href="/reviews/trainer-requests" className="btn btn-outline login-btn">
                   مراجعة الطلبات
