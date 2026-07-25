@@ -78,6 +78,9 @@ export default async function AdminPanel() {
             <Link href="/control-panel-2026/permissions" className="btn btn-primary">
               إدارة الصلاحيات
             </Link>
+            <Link href="/control-panel-2026/evaluations" className="btn btn-primary">
+              التقييم الشهري
+            </Link>
             <Link href="/reviews/trainer-requests" className="btn btn-outline">
               طلبات المدربين
             </Link>

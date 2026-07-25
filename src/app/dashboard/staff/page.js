@@ -6,6 +6,7 @@ import StaffFileManager from "@/components/staff/StaffFileManager";
 import DepartmentFileManager from "@/components/staff/DepartmentFileManager";
 import MyTasksList from "@/components/staff/MyTasksList";
 import DepartmentTasksManager from "@/components/staff/DepartmentTasksManager";
+import StaffEvaluationsList from "@/components/staff/StaffEvaluationsList";
 
 export default async function StaffDashboard() {
   const supabase = await createClient();
@@ -48,6 +49,12 @@ export default async function StaffDashboard() {
     .select("id, title, description, due_date, is_done")
     .eq("assigned_to", user.id)
     .order("due_date", { ascending: true });
+
+  const { data: myEvaluations } = await supabase
+    .from("staff_evaluations")
+    .select("id, period_month, rating, comment")
+    .eq("staff_id", user.id)
+    .order("period_month", { ascending: false });
 
   const { data: managedDepartments } = await supabase
     .from("departments")
@@ -103,6 +110,11 @@ export default async function StaffDashboard() {
         <div className="dash-section">
           <h2>مهامي</h2>
           <MyTasksList initialTasks={myTasks || []} />
+        </div>
+
+        <div className="dash-section">
+          <h2>تقييماتي الشهرية</h2>
+          <StaffEvaluationsList evaluations={myEvaluations || []} />
         </div>
 
         {managedSections.map(({ department, members, createdTasks }) => (

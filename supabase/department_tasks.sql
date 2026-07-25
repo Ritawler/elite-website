@@ -31,8 +31,12 @@ create table if not exists public.department_tasks (
 );
 alter table public.department_tasks enable row level security;
 
--- Visible to: the assignee, whoever created it (the department manager or
--- admin), and admins in general. NOT visible to other department members.
+-- Visible to: the assignee, whoever personally created it, and admins.
+-- "auth.uid() = created_by" is intentionally scoped to the exact creator —
+-- a department manager sees only the tasks THEY assigned, not every task in
+-- their department (e.g. tasks the admin or a previous manager created for
+-- the same department stay hidden from them). NOT visible to other
+-- department members at all.
 create policy "Assignee, creator, and admins can view a task"
   on public.department_tasks for select
   using (
@@ -42,7 +46,10 @@ create policy "Assignee, creator, and admins can view a task"
   );
 
 -- Only the department's manager (or admin) can create tasks for that
--- department, and only for someone who actually belongs to it.
+-- department, and only for someone who actually belongs to it. Admins are
+-- not required to be the department's manager_id — this is what lets the
+-- "إضافة مهمة لأي قسم" UI in /control-panel-2026/permissions insert tasks
+-- for any department directly.
 create policy "Department managers and admins can add tasks"
   on public.department_tasks for insert
   with check (
