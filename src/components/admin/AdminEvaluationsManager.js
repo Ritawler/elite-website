@@ -26,13 +26,15 @@ export default function AdminEvaluationsManager({ staffUsers, initialEvaluations
   const evaluations = initialEvaluations;
   const [staffId, setStaffId] = useState(staffUsers[0]?.id || "");
   const [month, setMonth] = useState(currentMonthValue());
-  const [rating, setRating] = useState(5);
+  const [baseScore, setBaseScore] = useState(12);
+  const [bonusPoints, setBonusPoints] = useState(0);
   const [comment, setComment] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
   const [editingId, setEditingId] = useState(null);
-  const [editRating, setEditRating] = useState(5);
+  const [editBaseScore, setEditBaseScore] = useState(12);
+  const [editBonusPoints, setEditBonusPoints] = useState(0);
   const [editComment, setEditComment] = useState("");
   const [busyId, setBusyId] = useState(null);
 
@@ -45,7 +47,8 @@ export default function AdminEvaluationsManager({ staffUsers, initialEvaluations
     const { error } = await supabase.from("staff_evaluations").insert({
       staff_id: staffId,
       period_month: `${month}-01`,
-      rating: Number(rating),
+      base_score: Number(baseScore),
+      bonus_points: Number(bonusPoints),
       comment: comment.trim() || null,
       created_by: currentUserId,
     });
@@ -64,7 +67,8 @@ export default function AdminEvaluationsManager({ staffUsers, initialEvaluations
 
   function startEdit(ev) {
     setEditingId(ev.id);
-    setEditRating(ev.rating);
+    setEditBaseScore(ev.base_score);
+    setEditBonusPoints(ev.bonus_points);
     setEditComment(ev.comment || "");
   }
 
@@ -72,7 +76,11 @@ export default function AdminEvaluationsManager({ staffUsers, initialEvaluations
     setBusyId(evId);
     const { error } = await supabase
       .from("staff_evaluations")
-      .update({ rating: Number(editRating), comment: editComment.trim() || null })
+      .update({
+        base_score: Number(editBaseScore),
+        bonus_points: Number(editBonusPoints),
+        comment: editComment.trim() || null,
+      })
       .eq("id", evId);
     setBusyId(null);
     if (!error) {
@@ -115,14 +123,27 @@ export default function AdminEvaluationsManager({ staffUsers, initialEvaluations
         <input type="month" value={month} onChange={(e) => setMonth(e.target.value)} required />
 
         <select
-          value={rating}
-          onChange={(e) => setRating(e.target.value)}
+          value={baseScore}
+          onChange={(e) => setBaseScore(e.target.value)}
           required
           style={{ padding: "10px 14px", borderRadius: "10px", border: "1.5px solid var(--border)", fontFamily: "'Cairo', sans-serif" }}
         >
-          {[5, 4, 3, 2, 1].map((n) => (
+          {Array.from({ length: 12 }, (_, i) => 12 - i).map((n) => (
             <option key={n} value={n}>
-              {n} / 5
+              {n} / 12 (الرقم الأساسي)
+            </option>
+          ))}
+        </select>
+
+        <select
+          value={bonusPoints}
+          onChange={(e) => setBonusPoints(e.target.value)}
+          required
+          style={{ padding: "10px 14px", borderRadius: "10px", border: "1.5px solid var(--border)", fontFamily: "'Cairo', sans-serif" }}
+        >
+          {[2, 1, 0].map((n) => (
+            <option key={n} value={n}>
+              {n} / 2 (بونس)
             </option>
           ))}
         </select>
@@ -146,13 +167,24 @@ export default function AdminEvaluationsManager({ staffUsers, initialEvaluations
             {editingId === ev.id ? (
               <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center", width: "100%" }}>
                 <select
-                  value={editRating}
-                  onChange={(e) => setEditRating(e.target.value)}
+                  value={editBaseScore}
+                  onChange={(e) => setEditBaseScore(e.target.value)}
                   style={{ padding: "8px 12px", borderRadius: "8px", border: "1.5px solid var(--border)", fontFamily: "'Cairo', sans-serif" }}
                 >
-                  {[5, 4, 3, 2, 1].map((n) => (
+                  {Array.from({ length: 12 }, (_, i) => 12 - i).map((n) => (
                     <option key={n} value={n}>
-                      {n} / 5
+                      {n} / 12 (الأساسي)
+                    </option>
+                  ))}
+                </select>
+                <select
+                  value={editBonusPoints}
+                  onChange={(e) => setEditBonusPoints(e.target.value)}
+                  style={{ padding: "8px 12px", borderRadius: "8px", border: "1.5px solid var(--border)", fontFamily: "'Cairo', sans-serif" }}
+                >
+                  {[2, 1, 0].map((n) => (
+                    <option key={n} value={n}>
+                      {n} / 2 (بونس)
                     </option>
                   ))}
                 </select>
@@ -167,7 +199,12 @@ export default function AdminEvaluationsManager({ staffUsers, initialEvaluations
             ) : (
               <>
                 <div>
-                  <strong>{ev.staff_name}</strong> — {formatPeriod(ev.period_month)} — {ev.rating} / 5
+                  <strong>{ev.staff_name}</strong> — {formatPeriod(ev.period_month)} —{" "}
+                  <span style={{ fontSize: "1.3em", fontWeight: 800 }}>{ev.base_score}</span>
+                  <span style={{ fontSize: "0.85em" }}> / 12</span>
+                  {" + "}
+                  <span style={{ fontSize: "1.3em", fontWeight: 800 }}>{ev.bonus_points}</span>
+                  <span style={{ fontSize: "0.85em" }}> بونس</span>
                   {ev.comment && <p style={{ margin: "6px 0 0" }}>{ev.comment}</p>}
                 </div>
                 <div style={{ display: "flex", gap: 8 }}>

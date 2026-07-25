@@ -1,10 +1,15 @@
 -- ELITE platform — Monthly staff evaluations
+--
+-- NOTE: if this table was already created on a live database by an earlier
+-- version of this file, run staff_evaluations_fix_scale.sql instead — this
+-- CREATE TABLE only applies to a fresh database that doesn't have it yet.
 
 create table if not exists public.staff_evaluations (
   id uuid primary key default gen_random_uuid(),
   staff_id uuid not null references public.users(id) on delete cascade,
   period_month date not null, -- always the 1st of the month, e.g. 2026-07-01 = July 2026
-  rating smallint not null check (rating between 1 and 5),
+  base_score smallint not null check (base_score between 1 and 12),
+  bonus_points smallint not null default 0 check (bonus_points between 0 and 2),
   comment text,
   created_by uuid references public.users(id) on delete set null,
   created_at timestamptz not null default now(),

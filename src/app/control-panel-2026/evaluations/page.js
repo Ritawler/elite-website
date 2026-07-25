@@ -19,7 +19,9 @@ export default async function AdminEvaluationsPage() {
 
   const { data: evaluationsRaw } = await supabase
     .from("staff_evaluations")
-    .select("id, staff_id, period_month, rating, comment, staff:users!staff_evaluations_staff_id_fkey(full_name, email)")
+    .select(
+      "id, staff_id, period_month, base_score, bonus_points, comment, staff:users!staff_evaluations_staff_id_fkey(full_name, email)"
+    )
     .order("period_month", { ascending: false });
 
   const evaluations = (evaluationsRaw || []).map((ev) => ({

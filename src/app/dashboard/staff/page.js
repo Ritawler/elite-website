@@ -52,7 +52,7 @@ export default async function StaffDashboard() {
 
   const { data: myEvaluations } = await supabase
     .from("staff_evaluations")
-    .select("id, period_month, rating, comment")
+    .select("id, period_month, base_score, bonus_points, comment")
     .eq("staff_id", user.id)
     .order("period_month", { ascending: false });
 

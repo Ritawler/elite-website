@@ -18,7 +18,12 @@ export default function StaffEvaluationsList({ evaluations }) {
       {evaluations.map((ev) => (
         <div className="cert-item" key={ev.id} style={{ alignItems: "flex-start", flexWrap: "wrap" }}>
           <div>
-            <strong>{formatPeriod(ev.period_month)}</strong> — {ev.rating} / 5
+            <strong>{formatPeriod(ev.period_month)}</strong> —{" "}
+            <span style={{ fontSize: "1.3em", fontWeight: 800 }}>{ev.base_score}</span>
+            <span style={{ fontSize: "0.85em" }}> / 12</span>
+            {" + "}
+            <span style={{ fontSize: "1.3em", fontWeight: 800 }}>{ev.bonus_points}</span>
+            <span style={{ fontSize: "0.85em" }}> بونس</span>
             {ev.comment && <p style={{ margin: "6px 0 0" }}>{ev.comment}</p>}
           </div>
         </div>
