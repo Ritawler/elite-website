@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import Header from "@/components/Header";
 import StaffNoteEditor from "@/components/staff/StaffNoteEditor";
@@ -50,6 +51,11 @@ export default async function StaffDashboard() {
     .eq("assigned_to", user.id)
     .order("due_date", { ascending: true });
 
+  const { count: enrollmentCount } = await supabase
+    .from("enrollments")
+    .select("id", { count: "exact", head: true })
+    .eq("student_id", user.id);
+
   const { data: myEvaluations } = await supabase
     .from("staff_evaluations")
     .select("id, period_month, base_score, bonus_points, comment")
@@ -92,6 +98,12 @@ export default async function StaffDashboard() {
       <div className="dashboard-wrap">
         <h1>مرحباً {profile?.full_name || user.email} 👋</h1>
         <p>لوحة تحكم الموظف {departmentName ? `— قسم ${departmentName}` : ""}</p>
+
+        {enrollmentCount > 0 && (
+          <Link href="/dashboard/student" className="btn btn-outline" style={{ marginBottom: 16 }}>
+            دوراتي المشترك بها ({enrollmentCount})
+          </Link>
+        )}
 
         <div className="dash-section">
           <StaffFileManager userId={user.id} initialFiles={files || []} departmentId={departmentId} />
