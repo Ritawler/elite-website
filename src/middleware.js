@@ -56,7 +56,18 @@ export async function middleware(request) {
     if (isDashboard && profile?.role_selected) {
       const role = profile.role;
       if (pathname.startsWith("/dashboard/student") && role !== "student") {
-        return NextResponse.redirect(new URL(`/dashboard/${role}`, request.url));
+        // Any role can buy a course (see CLAUDE.md "شراء الدورات مفتوح لكل
+        // الأدوار") — an actually-enrolled non-student still needs to reach
+        // this page to see their lessons, so only block if they have zero
+        // enrollments.
+        const { count } = await supabase
+          .from("enrollments")
+          .select("id", { count: "exact", head: true })
+          .eq("student_id", user.id);
+
+        if (!count) {
+          return NextResponse.redirect(new URL(`/dashboard/${role}`, request.url));
+        }
       }
       if (pathname.startsWith("/dashboard/trainer") && role !== "trainer") {
         return NextResponse.redirect(new URL(`/dashboard/${role}`, request.url));

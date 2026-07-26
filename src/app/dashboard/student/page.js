@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import Header from "@/components/Header";
 import CourseComments from "@/components/dashboard/CourseComments";
 import CourseMessageThread from "@/components/dashboard/CourseMessageThread";
+import CourseLessons from "@/components/dashboard/CourseLessons";
 import TrainerRequestBox from "@/components/dashboard/TrainerRequestBox";
 
 export default async function StudentDashboard() {
@@ -50,6 +51,14 @@ export default async function StudentDashboard() {
         .order("created_at", { ascending: true })
     : { data: [] };
 
+  const { data: allLessons } = courseIds.length
+    ? await supabase
+        .from("lessons")
+        .select("id, course_id, title, description, order_index")
+        .in("course_id", courseIds)
+        .order("order_index", { ascending: true })
+    : { data: [] };
+
   const { data: trainerRequest } = await supabase
     .from("trainer_requests")
     .select("id, status")
@@ -79,6 +88,7 @@ export default async function StudentDashboard() {
               if (!course) return null;
               const comments = (allComments || []).filter((c) => c.course_id === course.id);
               const messages = (allMessages || []).filter((m) => m.course_id === course.id);
+              const lessons = (allLessons || []).filter((l) => l.course_id === course.id);
               return (
                 <div className="course-card-dash" key={e.id}>
                   <div className="course-card-dash-head">
@@ -87,6 +97,8 @@ export default async function StudentDashboard() {
                       <p>{course.description}</p>
                     </div>
                   </div>
+
+                  <CourseLessons lessons={lessons} />
 
                   <CourseMessageThread
                     courseId={course.id}

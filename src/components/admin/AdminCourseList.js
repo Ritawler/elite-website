@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 
 function CourseRow({ course, onDeleted }) {
@@ -85,6 +86,9 @@ function CourseRow({ course, onDeleted }) {
         <button type="button" className="btn btn-outline" onClick={handleDelete}>
           حذف الدورة
         </button>
+        <Link href={`/control-panel-2026/courses/${course.id}/lessons`} className="btn btn-outline">
+          إدارة الدروس
+        </Link>
       </div>
     </div>
   );
