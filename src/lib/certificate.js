@@ -37,6 +37,7 @@ function escapeHtml(value) {
   })[c]);
 }
 
+
 export async function generateCertificatePdf({
   studentName,
   courseName,
@@ -51,17 +52,20 @@ export async function generateCertificatePdf({
   const dayName = DAY_NAMES[now.getDay()];
   const dateText = `${now.getDate()} / ${now.getMonth() + 1} / ${now.getFullYear()}`;
 
-  // Auto-shrink font sizes so long names stay within their available area.
-  // Student name: right edge at 1450px from left, extends leftward across ~1300px.
-  // Course name: right edge at 850px from left, extends leftward across ~700px.
-  const nameFontSize = studentName.length > 28
-    ? Math.max(28, Math.floor(46 * 28 / studentName.length))
-    : 46;
-  const courseNameFontSize = courseName.length > 35
-    ? Math.max(18, Math.floor(26 * 35 / courseName.length))
-    : 26;
+  // Student name box: 600px–1425px from left (825px wide). Auto-shrink for >33 chars.
+  const nameFontSize = Math.max(28, Math.min(46, Math.floor(1518 / Math.max(studentName.length, 33))));
+  // Course name box: 600px–1050px from left (450px wide). Base 32px.
+  const courseNameFontSize = Math.max(20, Math.min(32, Math.floor(818 / Math.max(courseName.length, 26))));
+  // Trainer name box: 1050px–1850px from left (800px wide). Auto-shrink for >56 chars.
+  // Trainer name box: 1100px–1395px from left (295px wide). Auto-shrink for >21 chars.
+  const trainerNameFontSize = Math.max(18, Math.min(26, Math.floor(546 / Math.max(trainerName.length, 21))));
 
-  const html = `
+  const html = buildHtml({ fontBase64, templateBase64, studentName, courseName, trainerName, trainerSignatureUrl, dayName, dateText, nameFontSize, courseNameFontSize, trainerNameFontSize });
+  return renderFixedSizeHtmlToPdf(html, { width: TEMPLATE_WIDTH, height: TEMPLATE_HEIGHT });
+}
+
+function buildHtml({ fontBase64, templateBase64, studentName, courseName, trainerName, trainerSignatureUrl, dayName, dateText, nameFontSize, courseNameFontSize, trainerNameFontSize }) {
+  return `
     <!doctype html>
     <html lang="ar" dir="rtl">
       <head>
@@ -90,13 +94,13 @@ export async function generateCertificatePdf({
             direction: rtl;
             text-align: right;
           }
-          /* RTL right-anchoring: left+right creates explicit width so text-align:right
-             truly pins the text's right edge at (2000 - right)px from left.
-             Without explicit left, Chromium RTL mode may left-anchor instead. */
-          .student-name { top: 610px; left: 0; right: 575px; font-size: ${nameFontSize}px; }
-          .course-name  { top: 728px; left: 0; right: 1150px; font-size: ${courseNameFontSize}px; }
-          .trainer-name { top: 814px; left: 700px; right: 850px; font-size: 21px; }
-          .day-name     { top: 814px; left: 130px; right: 1350px; font-size: 21px; }
+          /* RTL layout: left+right sets the box; text-align controls position within it.
+             Trainer name: right zone (1050–1850px), right-aligned toward "تقديم:".
+             Day name: left zone (50–875px), right-aligned toward "يوم". */
+          .student-name { top: 610px; left: 600px; right: 575px; text-align: center; font-size: ${nameFontSize}px; }
+          .course-name  { top: 728px; left: 600px; right: 950px; text-align: center; font-size: ${courseNameFontSize}px; }
+          .trainer-name { top: 814px; left: 1100px; right: 605px; text-align: right; overflow: hidden; font-size: ${trainerNameFontSize}px; }
+          .day-name     { top: 814px; left: 50px; right: 1125px; text-align: right; overflow: hidden; font-size: 26px; }
           .date-text    { top: 868px; left: 200px; right: 1150px; font-size: 34px; }
           .signature    { position: absolute; top: 1130px; right: 130px; height: 110px; }
         </style>
@@ -113,6 +117,4 @@ export async function generateCertificatePdf({
       </body>
     </html>
   `;
-
-  return renderFixedSizeHtmlToPdf(html, { width: TEMPLATE_WIDTH, height: TEMPLATE_HEIGHT });
 }
