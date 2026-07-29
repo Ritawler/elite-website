@@ -11,7 +11,7 @@ import path from "path";
 
 let cachedFontBase64 = null;
 
-function getCairoFontBase64() {
+export function getCairoFontBase64() {
   if (!cachedFontBase64) {
     const fontPath = path.join(process.cwd(), "src", "fonts", "Cairo-Variable.ttf");
     cachedFontBase64 = fs.readFileSync(fontPath).toString("base64");
@@ -19,7 +19,7 @@ function getCairoFontBase64() {
   return cachedFontBase64;
 }
 
-async function getBrowser() {
+export async function getBrowser() {
   if (process.env.VERCEL) {
     const chromium = (await import("@sparticuz/chromium")).default;
     const puppeteer = await import("puppeteer-core");
@@ -73,6 +73,28 @@ export async function renderHtmlToPdf(bodyHtml) {
       format: "A4",
       printBackground: true,
       margin: { top: "20mm", bottom: "20mm", left: "15mm", right: "15mm" },
+    });
+    return pdfBuffer;
+  } finally {
+    await browser.close();
+  }
+}
+
+// Renders a full, self-contained HTML document (not wrapped/padded like
+// renderHtmlToPdf) to a PDF sized exactly to `width`x`height` pixels, with
+// no margins — used for certificates, which are a fixed-size image template
+// with text overlaid at specific coordinates, not a flowing document.
+export async function renderFixedSizeHtmlToPdf(fullHtml, { width, height }) {
+  const browser = await getBrowser();
+  try {
+    const page = await browser.newPage();
+    await page.setViewport({ width, height });
+    await page.setContent(fullHtml, { waitUntil: "networkidle0" });
+    const pdfBuffer = await page.pdf({
+      width: `${width}px`,
+      height: `${height}px`,
+      printBackground: true,
+      margin: { top: 0, bottom: 0, left: 0, right: 0 },
     });
     return pdfBuffer;
   } finally {

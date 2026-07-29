@@ -11,6 +11,34 @@ function CourseRow({ course, onDeleted }) {
   const [isPublished, setIsPublished] = useState(course.is_published);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [signatureUrl, setSignatureUrl] = useState(course.trainer_signature_url || "");
+  const [uploadingSignature, setUploadingSignature] = useState(false);
+
+  async function handleSignatureUpload(e) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploadingSignature(true);
+
+    const filePath = `${course.id}/signature.png`;
+    const { error: uploadError } = await supabase.storage
+      .from("trainer-signatures")
+      .upload(filePath, file, { upsert: true });
+
+    if (uploadError) {
+      setUploadingSignature(false);
+      return;
+    }
+
+    const {
+      data: { publicUrl },
+    } = supabase.storage.from("trainer-signatures").getPublicUrl(filePath);
+
+    await supabase.from("courses").update({ trainer_signature_url: publicUrl }).eq("id", course.id);
+
+    setSignatureUrl(`${publicUrl}?t=${Date.now()}`);
+    setUploadingSignature(false);
+  }
 
   async function handleSave() {
     setSaving(true);
@@ -76,6 +104,26 @@ function CourseRow({ course, onDeleted }) {
             onChange={(e) => setIsPublished(e.target.checked)}
           />
           منشورة
+        </label>
+      </div>
+
+      <div className="new-course-row" style={{ marginTop: 12, alignItems: "center" }}>
+        {signatureUrl && (
+          <img
+            src={signatureUrl}
+            alt="توقيع المدرّب"
+            style={{ height: 40, background: "#fff", borderRadius: 6, padding: 2 }}
+          />
+        )}
+        <label className="btn btn-outline" style={{ cursor: "pointer" }}>
+          {uploadingSignature ? "جارٍ الرفع..." : signatureUrl ? "تغيير توقيع المدرّب" : "رفع توقيع المدرّب"}
+          <input
+            type="file"
+            accept="image/*"
+            onChange={handleSignatureUpload}
+            disabled={uploadingSignature}
+            style={{ display: "none" }}
+          />
         </label>
       </div>
 

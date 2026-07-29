@@ -13,7 +13,7 @@ export async function POST(request) {
     return NextResponse.json({ error: "unauthenticated" }, { status: 401 });
   }
 
-  const { courseId } = await request.json();
+  const { courseId, certificateName } = await request.json();
   if (!courseId) {
     return NextResponse.json({ error: "courseId required" }, { status: 400 });
   }
@@ -57,7 +57,7 @@ export async function POST(request) {
     await admin
       .from("enrollments")
       .upsert(
-        { student_id: user.id, course_id: courseId, amount_paid: 0 },
+        { student_id: user.id, course_id: courseId, amount_paid: 0, certificate_name: certificateName || null },
         { onConflict: "student_id,course_id", ignoreDuplicates: true }
       );
     return NextResponse.json({ url: `${origin}/dashboard/student` });
@@ -68,6 +68,7 @@ export async function POST(request) {
     course_id: courseId,
     order_id: orderId,
     amount,
+    certificate_name: certificateName || null,
   });
 
   if (insertError) {

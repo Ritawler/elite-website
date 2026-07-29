@@ -59,6 +59,16 @@ export default async function StudentDashboard() {
         .order("order_index", { ascending: true })
     : { data: [] };
 
+  const lessonIds = (allLessons || []).map((l) => l.id);
+  const { data: allProgress } = lessonIds.length
+    ? await supabase
+        .from("lesson_progress")
+        .select("lesson_id")
+        .eq("user_id", user.id)
+        .in("lesson_id", lessonIds)
+    : { data: [] };
+  const completedLessonIds = (allProgress || []).map((p) => p.lesson_id);
+
   const { data: trainerRequest } = await supabase
     .from("trainer_requests")
     .select("id, status")
@@ -89,6 +99,8 @@ export default async function StudentDashboard() {
               const comments = (allComments || []).filter((c) => c.course_id === course.id);
               const messages = (allMessages || []).filter((m) => m.course_id === course.id);
               const lessons = (allLessons || []).filter((l) => l.course_id === course.id);
+              const courseLessonIds = lessons.map((l) => l.id);
+              const completedForCourse = completedLessonIds.filter((id) => courseLessonIds.includes(id));
               return (
                 <div className="course-card-dash" key={e.id}>
                   <div className="course-card-dash-head">
@@ -98,7 +110,7 @@ export default async function StudentDashboard() {
                     </div>
                   </div>
 
-                  <CourseLessons lessons={lessons} />
+                  <CourseLessons lessons={lessons} initialCompletedIds={completedForCourse} />
 
                   <CourseMessageThread
                     courseId={course.id}

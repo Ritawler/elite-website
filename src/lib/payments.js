@@ -12,7 +12,7 @@ export async function confirmPayment({ orderId, trackId }) {
 
   const { data: payment } = await admin
     .from("payments")
-    .select("id, student_id, course_id, order_id, track_id, amount, status")
+    .select("id, student_id, course_id, order_id, track_id, amount, status, certificate_name")
     .eq("order_id", orderId)
     .single();
 
@@ -49,7 +49,12 @@ export async function confirmPayment({ orderId, trackId }) {
   await admin
     .from("enrollments")
     .upsert(
-      { student_id: payment.student_id, course_id: payment.course_id, amount_paid: payment.amount },
+      {
+        student_id: payment.student_id,
+        course_id: payment.course_id,
+        amount_paid: payment.amount,
+        certificate_name: payment.certificate_name,
+      },
       { onConflict: "student_id,course_id", ignoreDuplicates: true }
     );
 

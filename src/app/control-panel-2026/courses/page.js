@@ -7,7 +7,9 @@ export default async function AdminCoursesPage() {
 
   const { data: courses } = await supabase
     .from("courses")
-    .select("id, title, description, price, discount_price, is_published, trainer:users(full_name, email)")
+    .select(
+      "id, title, description, price, discount_price, is_published, trainer_signature_url, trainer:users(full_name, email)"
+    )
     .order("created_at", { ascending: false });
 
   return (
