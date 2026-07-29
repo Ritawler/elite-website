@@ -57,8 +57,8 @@ export async function generateCertificatePdf({
   // Course name box: 600px–1050px from left (450px wide). Base 32px.
   const courseNameFontSize = Math.max(20, Math.min(32, Math.floor(818 / Math.max(courseName.length, 26))));
   // Trainer name box: 1050px–1850px from left (800px wide). Auto-shrink for >56 chars.
-  // Trainer name box: 1100px–1395px from left (295px wide). Auto-shrink for >21 chars.
-  const trainerNameFontSize = Math.max(18, Math.min(26, Math.floor(546 / Math.max(trainerName.length, 21))));
+  // Trainer name box: 880px–1240px from left (360px wide). Auto-shrink for >25 chars.
+  const trainerNameFontSize = Math.max(18, Math.min(26, Math.floor(655 / Math.max(trainerName.length, 26))));
 
   const html = buildHtml({ fontBase64, templateBase64, studentName, courseName, trainerName, trainerSignatureUrl, dayName, dateText, nameFontSize, courseNameFontSize, trainerNameFontSize });
   return renderFixedSizeHtmlToPdf(html, { width: TEMPLATE_WIDTH, height: TEMPLATE_HEIGHT });
@@ -95,12 +95,12 @@ function buildHtml({ fontBase64, templateBase64, studentName, courseName, traine
             text-align: right;
           }
           /* RTL layout: left+right sets the box; text-align controls position within it.
-             Trainer name: right zone (1050–1850px), right-aligned toward "تقديم:".
-             Day name: left zone (50–875px), right-aligned toward "يوم". */
+             Trainer name: 880–1240px (between "،" right-edge and "تقديم:" left-edge).
+             Day name: 50–690px (left of "يوم" left-edge). */
           .student-name { top: 610px; left: 600px; right: 575px; text-align: center; font-size: ${nameFontSize}px; }
           .course-name  { top: 728px; left: 600px; right: 950px; text-align: center; font-size: ${courseNameFontSize}px; }
-          .trainer-name { top: 814px; left: 1100px; right: 605px; text-align: right; overflow: hidden; font-size: ${trainerNameFontSize}px; }
-          .day-name     { top: 814px; left: 50px; right: 1125px; text-align: right; overflow: hidden; font-size: 26px; }
+          .trainer-name { top: 814px; left: 880px; right: 760px; text-align: right; overflow: hidden; font-size: ${trainerNameFontSize}px; }
+          .day-name     { top: 814px; left: 50px; right: 1310px; text-align: right; overflow: hidden; font-size: 26px; }
           .date-text    { top: 868px; left: 200px; right: 1150px; font-size: 34px; }
           .signature    { position: absolute; top: 1130px; right: 130px; height: 110px; }
         </style>
