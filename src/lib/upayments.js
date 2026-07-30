@@ -11,7 +11,7 @@ const MOCK_MODE = process.env.UPAYMENTS_MOCK_MODE === "true";
 const BASE_URL = process.env.UPAYMENTS_BASE_URL;
 const API_KEY = process.env.UPAYMENTS_API_KEY;
 
-export async function createCharge({ orderId, amount, description, returnUrl, cancelUrl, notificationUrl }) {
+export async function createCharge({ orderId, amount, description, customerUniqueId, customerName, customerEmail, returnUrl, cancelUrl, notificationUrl }) {
   if (MOCK_MODE) {
     return {
       ok: true,
@@ -33,8 +33,15 @@ export async function createCharge({ orderId, amount, description, returnUrl, ca
         currency: "KWD",
         amount,
       },
+      paymentGateway: { src: "knet" },
       language: "ar",
       reference: { id: orderId },
+      customer: {
+        uniqueId: customerUniqueId,
+        name: customerName,
+        email: customerEmail,
+        mobile: "+96500000000",
+      },
       returnUrl,
       cancelUrl,
       notificationUrl,

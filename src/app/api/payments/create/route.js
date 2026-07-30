@@ -18,6 +18,12 @@ export async function POST(request) {
     return NextResponse.json({ error: "courseId required" }, { status: 400 });
   }
 
+  const { data: profile } = await supabase
+    .from("users")
+    .select("full_name")
+    .eq("id", user.id)
+    .single();
+
   const { data: course } = await supabase
     .from("courses")
     .select("id, title, price, discount_price, is_published")
@@ -75,13 +81,20 @@ export async function POST(request) {
     return NextResponse.json({ error: "could not start payment" }, { status: 500 });
   }
 
+  // Use canonical domain for UPayments URLs so they work regardless of which
+  // Vercel URL the request came through (preview vs custom domain).
+  const siteOrigin = process.env.NEXT_PUBLIC_SITE_URL || origin;
+
   const charge = await createCharge({
     orderId,
     amount,
     description: course.title,
-    returnUrl: `${origin}/payment/success?order_id=${orderId}`,
-    cancelUrl: `${origin}/payment/failed?order_id=${orderId}`,
-    notificationUrl: `${origin}/api/payments/webhook`,
+    customerUniqueId: user.id,
+    customerName: profile?.full_name || "ELITE Student",
+    customerEmail: user.email || "student@eliteco.com.kw",
+    returnUrl: `${siteOrigin}/payment/success?order_id=${orderId}`,
+    cancelUrl: `${siteOrigin}/payment/failed?order_id=${orderId}`,
+    notificationUrl: `${siteOrigin}/api/payments/webhook`,
   });
 
   if (!charge.ok) {
