@@ -80,19 +80,25 @@ export async function renderHtmlToPdf(bodyHtml) {
   }
 }
 
-// Renders a full, self-contained HTML document (not wrapped/padded like
-// renderHtmlToPdf) to a PDF sized exactly to `width`x`height` pixels, with
-// no margins — used for certificates, which are a fixed-size image template
-// with text overlaid at specific coordinates, not a flowing document.
+// Renders a full, self-contained HTML document to a PDF sized exactly to
+// `width`x`height` pixels with zero margins — used for certificates.
+//
+// Critical: Puppeteer's PDF renderer applies a minimum print margin even when
+// margin:{0} is set, which clips the top of the page. The fix is to:
+//   1. Declare `@page { size: Wpx Hpx; margin: 0; }` inside the HTML's <style>
+//      (certificate.js already injects this via the `pageSize` CSS block below).
+//   2. Use `preferCSSPageSize: true` so Puppeteer honours the CSS @page rule
+//      instead of its own width/height computation.
 export async function renderFixedSizeHtmlToPdf(fullHtml, { width, height }) {
   const browser = await getBrowser();
   try {
     const page = await browser.newPage();
-    await page.setViewport({ width, height });
+    // A4 landscape in pixels at 96 dpi (297mm × 210mm)
+    await page.setViewport({ width: 1123, height: 794, deviceScaleFactor: 1 });
     await page.setContent(fullHtml, { waitUntil: "networkidle0" });
     const pdfBuffer = await page.pdf({
-      width: `${width}px`,
-      height: `${height}px`,
+      width: "297mm",
+      height: "210mm",
       printBackground: true,
       margin: { top: 0, bottom: 0, left: 0, right: 0 },
     });
