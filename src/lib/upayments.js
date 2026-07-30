@@ -19,11 +19,12 @@ export async function createCharge({ orderId, amount, description, returnUrl, ca
     };
   }
 
+  console.error("[UPayments createCharge] hitting:", `${BASE_URL}/charge`);
   const res = await fetch(`${BASE_URL}/charge`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      Authorization: `Bearer ${API_KEY}`,
+      token: API_KEY,
     },
     body: JSON.stringify({
       order: {
