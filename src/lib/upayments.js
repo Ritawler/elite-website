@@ -48,10 +48,12 @@ export async function createCharge({ orderId, amount, description, customerUniqu
     }),
   });
 
-  const data = await res.json();
-  console.error("[UPayments createCharge] status:", res.status, "body:", JSON.stringify(data));
+  const raw = await res.text();
+  console.error("[UPayments createCharge] status:", res.status, "raw:", raw.slice(0, 500));
+  let data;
+  try { data = JSON.parse(raw); } catch { data = null; }
   if (!res.ok || !data?.status || !data?.data?.link) {
-    return { ok: false, error: data?.message || "تعذّر إنشاء رابط الدفع" };
+    return { ok: false, error: data?.message || `HTTP ${res.status}` };
   }
   return { ok: true, link: data.data.link };
 }
