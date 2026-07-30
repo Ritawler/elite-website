@@ -12,12 +12,35 @@ const esc = s => String(s ?? "")
 
 const toEn = s => String(s).replace(/[٠-٩]/g, d => d.charCodeAt(0)-0x0660);
 
-// Load a PNG and return it as a base64 data URI — no pixel manipulation.
-// Used for watermark/logo where white blending is handled via CSS mix-blend-mode.
-function assetRaw(name) {
+// Load logo and convert to black silhouette on transparent background via sharp.
+// White pixels → transparent; all other pixels → solid black.
+// This guarantees visibility at any opacity regardless of CSS filter support.
+async function assetLogoWm(name) {
   const p = join(process.cwd(), "public", "certificate-assets", name);
   if (!existsSync(p)) return null;
-  return `data:image/png;base64,${readFileSync(p).toString("base64")}`;
+  try {
+    const sharp = (await import("sharp")).default;
+    const src = readFileSync(p);
+    const { data, info } = await sharp(src)
+      .ensureAlpha()
+      .raw()
+      .toBuffer({ resolveWithObject: true });
+    const px = new Uint8Array(data);
+    for (let i = 0; i < px.length; i += 4) {
+      const r = px[i], g = px[i+1], b = px[i+2];
+      if (r > 200 && g > 200 && b > 200) {
+        px[i+3] = 0; // white → transparent
+      } else {
+        px[i] = 0; px[i+1] = 0; px[i+2] = 0; // logo pixels → black
+      }
+    }
+    const out = await sharp(Buffer.from(px), {
+      raw: { width: info.width, height: info.height, channels: 4 },
+    }).png().toBuffer();
+    return `data:image/png;base64,${out.toString("base64")}`;
+  } catch {
+    return null;
+  }
 }
 
 // Load a PNG and strip near-white pixels via sharp so the image is truly
@@ -57,7 +80,7 @@ export async function generateCertificatePdf({
     asset("admin-signature.png"),
     asset("medal.png"),
   ]);
-  const logoWm = assetRaw("logo-watermark.png");
+  const logoWm = await assetLogoWm("logo-watermark.png");
 
   const honorific     = gender === "female" ? "الأستاذة:" : "الأستاذ:";
   const completedVerb = gender === "female" ? "أتمت دورة" : "أتم دورة";
@@ -78,32 +101,32 @@ export async function generateCertificatePdf({
 
 /* ─────────────── SVG helpers ─────────────── */
 
-// Gradient triangle for TR corner — right angle AT (340,0) = cert's top-right corner.
-// BL corner uses same SVG with rotate(180deg), which mirrors it perfectly.
-const TRIANGLE_SVG = `<svg viewBox="0 0 340 340" xmlns="http://www.w3.org/2000/svg">
-  <defs>
-    <linearGradient id="tg" x1="340" y1="0" x2="0" y2="340" gradientUnits="userSpaceOnUse">
-      <stop offset="0%"   stop-color="#4B96CE"/>
-      <stop offset="100%" stop-color="#87C781"/>
-    </linearGradient>
-  </defs>
-  <!-- Layered triangles — right angle at (340,0) = cert corner -->
-  <polygon points="340,0 340,340 0,0"   fill="url(#tg)" opacity="0.88"/>
-  <polygon points="340,0 340,230 110,0" fill="#4B96CE"   opacity="0.18"/>
-  <polygon points="340,0 340,120 220,0" fill="#87C781"   opacity="0.22"/>
-  <!-- Green hypotenuse accent line -->
-  <line x1="0" y1="0" x2="340" y2="340" stroke="#87C781" stroke-width="2" opacity="0.6"/>
-  <!-- White shine lines along the two legs (top edge + right edge) -->
-  <line x1="0" y1="0" x2="340" y2="0" stroke="#FFFFFF" stroke-width="4" opacity="0.5"/>
+// TR corner — solid green #87C781, right angle at (340,0)
+const TRIANGLE_TR_SVG = `<svg viewBox="0 0 340 340" xmlns="http://www.w3.org/2000/svg">
+  <polygon points="340,0 340,340 0,0" fill="#87C781" opacity="0.85"/>
+  <polygon points="340,0 340,200 140,0" fill="#87C781" opacity="0.25"/>
+  <line x1="0" y1="0" x2="340" y2="340" stroke="#FFFFFF" stroke-width="2" opacity="0.4"/>
+  <line x1="0" y1="0" x2="340" y2="0"   stroke="#FFFFFF" stroke-width="4" opacity="0.5"/>
   <line x1="340" y1="0" x2="340" y2="340" stroke="#FFFFFF" stroke-width="4" opacity="0.5"/>
-  <!-- L-bracket ornament at the corner (340,0) -->
-  <rect x="290" y="0"  width="50"  height="9"  fill="#FFFFFF" opacity="0.9"/>
-  <rect x="331" y="0"  width="9"   height="50" fill="#FFFFFF" opacity="0.9"/>
-  <rect x="306" y="0"  width="30"  height="4.5" fill="#87C781" opacity="0.9"/>
-  <rect x="335.5" y="0" width="4.5" height="30" fill="#87C781" opacity="0.9"/>
-  <!-- Diamond ornaments near the corner -->
-  <polygon points="310,18 322,30 310,42 298,30" fill="#FFFFFF"  opacity="0.9"/>
-  <polygon points="280,10 289,19 280,28 271,19" fill="#87C781" opacity="0.85"/>
+  <rect x="290" y="0" width="50" height="8"  fill="#FFFFFF" opacity="0.9"/>
+  <rect x="332" y="0" width="8"  height="50" fill="#FFFFFF" opacity="0.9"/>
+  <rect x="307" y="0" width="28" height="4"  fill="#87C781" opacity="1"/>
+  <rect x="336" y="0" width="4"  height="28" fill="#87C781" opacity="1"/>
+  <polygon points="310,18 321,29 310,40 299,29" fill="#FFFFFF" opacity="0.95"/>
+</svg>`;
+
+// BL corner — solid blue #4B96CE, right angle at (340,0), rotated 180° in CSS → bottom-left
+const TRIANGLE_BL_SVG = `<svg viewBox="0 0 340 340" xmlns="http://www.w3.org/2000/svg">
+  <polygon points="340,0 340,340 0,0" fill="#4B96CE" opacity="0.85"/>
+  <polygon points="340,0 340,200 140,0" fill="#4B96CE" opacity="0.25"/>
+  <line x1="0" y1="0" x2="340" y2="340" stroke="#FFFFFF" stroke-width="2" opacity="0.4"/>
+  <line x1="0" y1="0" x2="340" y2="0"   stroke="#FFFFFF" stroke-width="4" opacity="0.5"/>
+  <line x1="340" y1="0" x2="340" y2="340" stroke="#FFFFFF" stroke-width="4" opacity="0.5"/>
+  <rect x="290" y="0" width="50" height="8"  fill="#FFFFFF" opacity="0.9"/>
+  <rect x="332" y="0" width="8"  height="50" fill="#FFFFFF" opacity="0.9"/>
+  <rect x="307" y="0" width="28" height="4"  fill="#4B96CE" opacity="1"/>
+  <rect x="336" y="0" width="4"  height="28" fill="#4B96CE" opacity="1"/>
+  <polygon points="310,18 321,29 310,40 299,29" fill="#FFFFFF" opacity="0.95"/>
 </svg>`;
 
 // Gold arc ornament for TL / BR corners (rotated 180° for BR)
@@ -240,7 +263,7 @@ html,body{
 .wm-img{
   position:absolute;top:10mm;left:10mm;
   width:200px;height:auto;
-  opacity:0.15;
+  opacity:0.1;
   filter:brightness(0);
   pointer-events:none;z-index:0;
 }
@@ -378,10 +401,26 @@ html,body{
 .col-line{width:40mm;height:0;border-top:0.35mm solid #888;margin-top:1mm;}
 .col-label{font-size:3.5mm;color:#555;text-align:center;margin-top:0.5mm;}
 
+/* Inner border corner accents */
+.ic{position:absolute;z-index:2;}
+.ic-dot{width:3mm;height:3mm;border-radius:50%;}
+.ic-tr{top:7.5mm;right:7.5mm;}.ic-tl{top:7.5mm;left:7.5mm;}
+.ic-br{bottom:7.5mm;right:7.5mm;}.ic-bl{bottom:7.5mm;left:7.5mm;}
+
+/* Colored bar under title */
+.title-bar{
+  width:60mm;height:1.2mm;
+  background:linear-gradient(90deg,#4B96CE,#87C781,#C9A84C);
+  border-radius:1mm;margin-bottom:2mm;
+}
+
 /* Medal */
 .medal-img{height:28mm;width:auto;object-fit:contain;}
-.logo-name{font-size:5mm;font-weight:900;color:#4B96CE;letter-spacing:1.2mm;}
-.logo-sub{font-size:2.5mm;color:#999;letter-spacing:0.5mm;}
+.logo-name{font-size:6mm;font-weight:900;color:#4B96CE;letter-spacing:1.2mm;line-height:1;margin:0;}
+.logo-sub{font-size:3mm;color:#777;letter-spacing:0.5mm;font-weight:700;line-height:1;margin:0;}
+
+/* Sig removed */
+.sig-img{display:none;}.sig-placeholder{display:none;}
 </style>
 </head>
 <body>
@@ -402,9 +441,15 @@ html,body{
   <div class="corner-gem2 cg2-br"></div>
   <div class="corner-gem2 cg2-bl"></div>
 
-  <!-- Decorative corners: triangles TR + BL -->
-  <div class="corner-svg cs-tr">${TRIANGLE_SVG}</div>
-  <div class="corner-svg cs-bl">${TRIANGLE_SVG}</div>
+  <!-- Inner border corner accent dots -->
+  <div class="ic ic-tr ic-dot" style="background:#87C781"></div>
+  <div class="ic ic-tl ic-dot" style="background:#4B96CE"></div>
+  <div class="ic ic-br ic-dot" style="background:#4B96CE"></div>
+  <div class="ic ic-bl ic-dot" style="background:#87C781"></div>
+
+  <!-- Decorative corners: TR green, BL blue -->
+  <div class="corner-svg cs-tr">${TRIANGLE_TR_SVG}</div>
+  <div class="corner-svg cs-bl">${TRIANGLE_BL_SVG}</div>
   <!-- Decorative corners: gold arcs TL + BR -->
   <div class="corner-svg cs-tl">${ARC_SVG}</div>
   <div class="corner-svg cs-br">${ARC_SVG}</div>
@@ -416,6 +461,7 @@ html,body{
   <div class="content">
 
     <div class="title">شهادة إتمام</div>
+    <div class="title-bar"></div>
 
     <div class="title-orn">
       <div class="t-seg"></div>
@@ -466,8 +512,7 @@ html,body{
   </div>
 
   <!-- ───── Bottom strip ───── -->
-  <!-- RTL flex: first child → right, last child → left -->
-  <div class="bottom-strip">
+  <div class="bottom-strip" style="justify-content:center;gap:20mm;">
 
     <!-- RIGHT: stamp overlapping admin sig -->
     <div class="col">
@@ -482,15 +527,10 @@ html,body{
     <!-- CENTER: medal + ELITE COMPANY -->
     <div class="col">
       ${medalTag}
-      <div class="logo-name">ELITE</div>
-      <div class="logo-sub">COMPANY</div>
-    </div>
-
-    <!-- LEFT: trainer sig -->
-    <div class="col">
-      ${trainerSig}
-      <div class="col-line"></div>
-      <div class="col-label">توقيع المدرب</div>
+      <div style="display:flex;flex-direction:column;align-items:center;gap:0;line-height:1;">
+        <div class="logo-name">ELITE</div>
+        <div class="logo-sub">COMPANY</div>
+      </div>
     </div>
 
   </div>
