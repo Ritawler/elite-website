@@ -1,51 +1,23 @@
-// Server-only. Fully coded certificate — HTML → PDF via Puppeteer + Cairo.
-// Assets loaded from /public/certificate-assets/ at runtime (graceful fallback).
+// Server-only. Certificate overlay — text + assets rendered over PNG template via Puppeteer.
+// Template space: 2000×1414 px. Viewport: 1123×794 (A4 landscape at 96 dpi).
+// All coordinates authored in template space, scaled by S = 1123/2000.
 import { readFileSync, existsSync } from "fs";
 import { join }                      from "path";
 import { getCairoFontBase64, renderFixedSizeHtmlToPdf } from "@/lib/pdf";
-
-const W = 2000, H = 1414;
 
 const esc = s => String(s ?? "")
   .replace(/&/g,"&amp;").replace(/</g,"&lt;")
   .replace(/>/g,"&gt;").replace(/"/g,"&quot;");
 
-const toEn = s => String(s).replace(/[٠-٩]/g, d => d.charCodeAt(0)-0x0660);
+const toEn = s => String(s).replace(/[٠-٩]/g, d => d.charCodeAt(0) - 0x0660);
 
-// Load logo and convert to black silhouette on transparent background via sharp.
-// White pixels → transparent; all other pixels → solid black.
-// This guarantees visibility at any opacity regardless of CSS filter support.
-async function assetLogoWm(name) {
-  const p = join(process.cwd(), "public", "certificate-assets", name);
+function loadTemplate(name) {
+  const p = join(process.cwd(), "public", "certificate-templates", name);
   if (!existsSync(p)) return null;
-  try {
-    const sharp = (await import("sharp")).default;
-    const src = readFileSync(p);
-    const { data, info } = await sharp(src)
-      .ensureAlpha()
-      .raw()
-      .toBuffer({ resolveWithObject: true });
-    const px = new Uint8Array(data);
-    for (let i = 0; i < px.length; i += 4) {
-      const r = px[i], g = px[i+1], b = px[i+2];
-      if (r > 200 && g > 200 && b > 200) {
-        px[i+3] = 0; // white → transparent
-      } else {
-        px[i] = 0; px[i+1] = 0; px[i+2] = 0; // logo pixels → black
-      }
-    }
-    const out = await sharp(Buffer.from(px), {
-      raw: { width: info.width, height: info.height, channels: 4 },
-    }).png().toBuffer();
-    return `data:image/png;base64,${out.toString("base64")}`;
-  } catch {
-    return null;
-  }
+  try { return `data:image/png;base64,${readFileSync(p).toString("base64")}`; }
+  catch { return null; }
 }
 
-// Load a PNG and strip near-white pixels via sharp so the image is truly
-// transparent — used for stamp/signature/medal where mix-blend-mode alone
-// is unreliable in Puppeteer PDF mode.
 async function asset(name) {
   const p = join(process.cwd(), "public", "certificate-assets", name);
   if (!existsSync(p)) return null;
@@ -53,13 +25,11 @@ async function asset(name) {
     const sharp = (await import("sharp")).default;
     const src = readFileSync(p);
     const { data, info } = await sharp(src)
-      .ensureAlpha()
-      .raw()
-      .toBuffer({ resolveWithObject: true });
+      .ensureAlpha().raw().toBuffer({ resolveWithObject: true });
     const px = new Uint8Array(data);
     for (let i = 0; i < px.length; i += 4) {
-      const r = px[i], g = px[i + 1], b = px[i + 2];
-      if (r > 220 && g > 220 && b > 220) px[i + 3] = 0;
+      const r = px[i], g = px[i+1], b = px[i+2];
+      if (r > 220 && g > 220 && b > 220) px[i+3] = 0;
     }
     const out = await sharp(Buffer.from(px), {
       raw: { width: info.width, height: info.height, channels: 4 },
@@ -80,116 +50,96 @@ export async function generateCertificatePdf({
     asset("admin-signature.png"),
     asset("medal.png"),
   ]);
-  const logoWm = await assetLogoWm("logo-watermark.png");
+  const tpl = loadTemplate("new_template.png");
 
   const honorific     = gender === "female" ? "الأستاذة:" : "الأستاذ:";
   const completedVerb = gender === "female" ? "أتمت دورة" : "أتم دورة";
-  const nameLen       = studentName.length;
-  const courseLen     = courseName.length;
-  // Font sizes in mm — A4 landscape canvas (267×180mm usable at 15mm padding)
-  const nameFz   = Math.max(6, Math.min(12, Math.floor(420 / Math.max(nameLen, 35))));
-  const courseFz = Math.max(5, Math.min( 8, Math.floor(300 / Math.max(courseLen, 35))));
 
   return renderFixedSizeHtmlToPdf(
-    html({ font, logoWm, stamp, adminSig, medal,
-           studentName, courseName, trainerName, dayName,
-           dateEnglish: toEn(dateText), honorific, completedVerb,
-           trainerSignatureUrl, nameFz, courseFz }),
-    { width: 1123, height: 794 }   // A4 landscape px — used only for viewport
+    buildHtml({ font, tpl, stamp, adminSig, medal,
+                studentName, courseName, trainerName, dayName,
+                dateEnglish: toEn(dateText), honorific, completedVerb }),
+    { width: 1123, height: 794 }
   );
 }
 
-/* ─────────────── SVG helpers ─────────────── */
+/* ─────────────────── layout plan (template 2000×1414 space) ───────────────────
+   Safe area inside gray border:  x [115 → 1885],  y [105 → 1310]
+   Total usable height: 1205 px
 
-// TR corner — solid green #87C781, right angle at (340,0)
-const TRIANGLE_TR_SVG = `<svg viewBox="0 0 340 340" xmlns="http://www.w3.org/2000/svg">
-  <polygon points="340,0 340,340 0,0" fill="#87C781" opacity="0.85"/>
-  <polygon points="340,0 340,200 140,0" fill="#87C781" opacity="0.25"/>
-  <line x1="0" y1="0" x2="340" y2="340" stroke="#FFFFFF" stroke-width="2" opacity="0.4"/>
-  <line x1="0" y1="0" x2="340" y2="0"   stroke="#FFFFFF" stroke-width="4" opacity="0.5"/>
-  <line x1="340" y1="0" x2="340" y2="340" stroke="#FFFFFF" stroke-width="4" opacity="0.5"/>
-  <rect x="290" y="0" width="50" height="8"  fill="#FFFFFF" opacity="0.9"/>
-  <rect x="332" y="0" width="8"  height="50" fill="#FFFFFF" opacity="0.9"/>
-  <rect x="307" y="0" width="28" height="4"  fill="#87C781" opacity="1"/>
-  <rect x="336" y="0" width="4"  height="28" fill="#87C781" opacity="1"/>
-  <polygon points="310,18 321,29 310,40 299,29" fill="#FFFFFF" opacity="0.95"/>
-</svg>`;
+   TEXT ZONE   y 135 → 910   (content + even gaps fill this band)
+   HR DIVIDER  y 930
+   IMAGE ZONE  y 955 → 1280
 
-// BL corner — solid blue #4B96CE, right angle at (340,0), rotated 180° in CSS → bottom-left
-const TRIANGLE_BL_SVG = `<svg viewBox="0 0 340 340" xmlns="http://www.w3.org/2000/svg">
-  <polygon points="340,0 340,340 0,0" fill="#4B96CE" opacity="0.85"/>
-  <polygon points="340,0 340,200 140,0" fill="#4B96CE" opacity="0.25"/>
-  <line x1="0" y1="0" x2="340" y2="340" stroke="#FFFFFF" stroke-width="2" opacity="0.4"/>
-  <line x1="0" y1="0" x2="340" y2="0"   stroke="#FFFFFF" stroke-width="4" opacity="0.5"/>
-  <line x1="340" y1="0" x2="340" y2="340" stroke="#FFFFFF" stroke-width="4" opacity="0.5"/>
-  <rect x="290" y="0" width="50" height="8"  fill="#FFFFFF" opacity="0.9"/>
-  <rect x="332" y="0" width="8"  height="50" fill="#FFFFFF" opacity="0.9"/>
-  <rect x="307" y="0" width="28" height="4"  fill="#4B96CE" opacity="1"/>
-  <rect x="336" y="0" width="4"  height="28" fill="#4B96CE" opacity="1"/>
-  <polygon points="310,18 321,29 310,40 299,29" fill="#FFFFFF" opacity="0.95"/>
-</svg>`;
+   Text elements + approximate heights:
+     Title     100px font → ~115px
+     Intro      41px font →  ~55px
+     Name row   60–90px  → ~105px
+     Course     43–76px  →  ~90px
+     Trainer    40px     →  ~52px
+     Date       40px     →  ~52px
+   Sum of heights: ~469px
+   Available (135→910): 775px  →  gaps = (775-469)/5 ≈ 61px between elements
 
-// Gold arc ornament for TL / BR corners (rotated 180° for BR)
-const ARC_SVG = `<svg viewBox="0 0 220 220" xmlns="http://www.w3.org/2000/svg">
-  <path d="M 0 180 A 180,180 0 0,1 180,0"
-        fill="none" stroke="#C9A84C" stroke-width="3" opacity="0.7"/>
-  <path d="M 0 130 A 130,130 0 0,1 130,0"
-        fill="none" stroke="#C9A84C" stroke-width="2" opacity="0.5"/>
-  <path d="M 0 80  A 80,80  0 0,1 80,0"
-        fill="none" stroke="#C9A84C" stroke-width="1.5" opacity="0.4"/>
-  <path d="M 0 38  A 38,38  0 0,1 38,0"
-        fill="none" stroke="#4B96CE" stroke-width="2" opacity="0.5"/>
-  <!-- small diamond where arcs meet the edge -->
-  <polygon points="0,178 7,185 0,192 -7,185" fill="#C9A84C" opacity="0.8"/>
-  <polygon points="178,0 185,7 192,0 185,-7" fill="#C9A84C" opacity="0.8"/>
-</svg>`;
-
-/* ─────────────── HTML builder ─────────────── */
-function html({
-  font, logoWm, stamp, adminSig, medal,
+   Image zone (y 955→1280, height 325px):
+     LEFT:  nothing (template has decorative corner there)
+     CENTER: medal h=252 (y 955→1207) + "ELITE COMPANY" (y 1225, font 46px)
+     RIGHT:  stamp+sig wrapper h=280 (y 955→1235) + "توقيع الإدارة" (y 1253)
+             inside wrapper: stamp top=0 h=220, sig bottom=0 h=130 → 70px overlap
+────────────────────────────────────────────────────────────────────────────── */
+function buildHtml({
+  font, tpl, stamp, adminSig, medal,
   studentName, courseName, trainerName, dayName, dateEnglish,
-  honorific, completedVerb, trainerSignatureUrl,
-  nameFz, courseFz,
+  honorific, completedVerb,
 }) {
-  // Bottom column image snippets
-  const trainerSig = trainerSignatureUrl
-    ? `<img class="sig-img" src="${esc(trainerSignatureUrl)}" alt=""/>`
-    : `<div class="sig-placeholder"></div>`;
+  const S = 1123 / 2000;
+  const p = n => Math.round(n * S);
 
-  // Stamp overlaps admin signature: stamp centered on top at 85% opacity
-  const stampOverlay = stamp
-    ? `<img class="stamp-img" src="${stamp}" alt=""/>`
-    : `<svg class="stamp-img" width="130" height="130" viewBox="0 0 130 130" xmlns="http://www.w3.org/2000/svg">
-         <circle cx="65" cy="65" r="58" fill="none" stroke="#4B96CE" stroke-width="3"/>
-         <circle cx="65" cy="65" r="48" fill="none" stroke="#4B96CE" stroke-width="1"/>
-         <text x="65" y="60" font-size="13" text-anchor="middle" fill="#4B96CE"
-               font-weight="700" font-family="Cairo,sans-serif">إدارة شركة</text>
-         <text x="65" y="78" font-size="16" text-anchor="middle" fill="#4B96CE"
-               font-weight="900" font-family="Cairo,sans-serif">ELITE</text>
-       </svg>`;
+  // Dynamic font sizes (template space units)
+  const nameFt  = Math.max(62, Math.min(90,  Math.floor(4600 / Math.max(studentName.length, 34))));
+  const crseFt  = Math.max(50, Math.min(76,  Math.floor(3800 / Math.max(courseName.length,  38))));
 
-  const adminSigTag = adminSig
-    ? `<img class="admin-sig-img" src="${adminSig}" alt=""/>`
-    : `<div class="sig-placeholder"></div>`;
+  // Y positions (template space)
+  const Y_TITLE   = 135;
+  const Y_INTRO   = 135 + 115 + 61;   // 311
+  const Y_NAME    = 311 +  55 + 61;   // 427
+  const Y_COURSE  = 427 + 105 + 61;   // 593
+  const Y_TRAINER = 593 +  90 + 61;   // 744
+  const Y_DATE    = 744 +  52 + 61;   // 857  (bottom ≈ 909, close to 910 ✓)
+  const Y_HR      = 930;
+  const Y_IMG     = 955;
 
-  const medalTag = medal
-    ? `<img class="medal-img" src="${medal}" alt=""/>`
-    : `<svg class="medal-img" width="288" height="288" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-         <defs>
-           <linearGradient id="mg" x1="0%" y1="0%" x2="100%" y2="100%">
-             <stop offset="0%"   stop-color="#4B96CE"/>
-             <stop offset="100%" stop-color="#87C781"/>
-           </linearGradient>
-         </defs>
-         <circle cx="50" cy="50" r="46" fill="none" stroke="url(#mg)" stroke-width="3"/>
-         <circle cx="50" cy="50" r="36" fill="none" stroke="#C9A84C" stroke-width="1.5"/>
-         <text x="50" y="60" font-size="34" text-anchor="middle"
-               fill="#C9A84C" font-family="serif">★</text>
-       </svg>`;
+  // Stamp+sig wrapper: height 285, right 80 from edge, width 290
+  const WRAP_H   = 285;
+  const WRAP_W   = 290;
+  const WRAP_R   = 80;    // distance from right edge of template
+  const Y_SIG_LBL = Y_IMG + WRAP_H + 18;  // "توقيع الإدارة" label
 
-  const wmTag = logoWm
-    ? `<img class="wm-img" src="${logoWm}" alt=""/>`
-    : `<div class="wm-text">ELITE</div>`;
+  // Medal: center, height 252
+  const MEDAL_H  = 252;
+  const Y_ELITE  = Y_IMG + MEDAL_H + 18;  // "ELITE COMPANY" label
+
+  const bg = tpl ? `url("${tpl}")` : `#f3f3f0`;
+
+  // Stamp+sig wrapper HTML (stamp overlaps sig at 85% opacity)
+  const sigInner   = adminSig
+    ? `<img src="${adminSig}"
+           style="position:absolute;bottom:0;left:50%;transform:translateX(-50%);
+                  height:${p(130)}px;width:auto;object-fit:contain;z-index:1;"/>`
+    : ``;
+  const stampInner = stamp
+    ? `<img src="${stamp}"
+           style="position:absolute;top:0;left:50%;transform:translateX(-50%);
+                  height:${p(220)}px;width:auto;object-fit:contain;
+                  opacity:0.85;z-index:2;"/>`
+    : ``;
+
+  const medalEl = medal
+    ? `<img src="${medal}"
+         style="position:absolute;left:50%;transform:translateX(-50%);
+                top:${p(Y_IMG)}px;height:${p(MEDAL_H)}px;
+                width:auto;object-fit:contain;"/>`
+    : ``;
 
   return `<!doctype html>
 <html lang="ar" dir="rtl">
@@ -198,341 +148,111 @@ function html({
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Naskh+Arabic:wght@400;700;900&display=swap" rel="stylesheet">
 <style>
-@font-face {
+@font-face{
   font-family:'Cairo';
   src:url(data:font/ttf;base64,${font}) format('truetype');
   font-weight:100 1000;
 }
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-/* A4 landscape in mm — fills the PDF page exactly, no clipping */
+*{box-sizing:border-box;margin:0;padding:0;}
 html,body{
-  width:297mm;height:210mm;
-  margin:0;padding:0;overflow:hidden;
-  font-family:'Cairo',sans-serif;direction:rtl;
+  width:1123px;height:794px;margin:0;padding:0;
+  overflow:hidden;font-family:'Cairo',sans-serif;
 }
-
-/* ══════════ Outer shell ══════════ */
 .cert{
-  position:relative;
-  width:100%;height:100%;
-  /* cream background */
-  background-color:#FAFAF7;
-  background-image:radial-gradient(circle,#E8E8DF 0.4mm,transparent 0.4mm);
-  background-size:9.5mm 9.5mm;
-  display:flex;flex-direction:column;align-items:center;
-  padding:15mm 15mm 5mm;
+  position:relative;width:1123px;height:794px;
+  background:${bg} no-repeat center/cover;
+  overflow:hidden;
 }
-
-/* ── Borders ── */
-.b-outer{
-  position:absolute;inset:3mm;
-  border:1.2mm solid transparent;
-  background:
-    linear-gradient(#FAFAF7,#FAFAF7) padding-box,
-    linear-gradient(135deg,#4B96CE 0%,#87C781 50%,#4B96CE 100%) border-box;
-  pointer-events:none;z-index:1;
-}
-.b-inner{
-  position:absolute;inset:6mm;
-  border:0.3mm solid #C9A84C99;
-  pointer-events:none;z-index:1;
-}
-
-/* ── Corner gold diamond ornaments ── */
-.corner-gem{
-  position:absolute;width:4mm;height:4mm;
-  background:#C9A84C;transform:rotate(45deg);z-index:5;
-}
-.cg-tr{top:4mm;right:4mm;}.cg-tl{top:4mm;left:4mm;}
-.cg-br{bottom:4mm;right:4mm;}.cg-bl{bottom:4mm;left:4mm;}
-.corner-gem2{
-  position:absolute;width:2.5mm;height:2.5mm;
-  background:#C9A84C88;transform:rotate(45deg);z-index:5;
-}
-.cg2-tr{top:7mm;right:7mm;}.cg2-tl{top:7mm;left:7mm;}
-.cg2-br{bottom:7mm;right:7mm;}.cg2-bl{bottom:7mm;left:7mm;}
-
-/* ── Decorative corner SVGs ── */
-.corner-svg{position:absolute;pointer-events:none;z-index:3;overflow:hidden;}
-.cs-tr{top:0;right:0;width:50mm;height:50mm;}
-.cs-bl{bottom:0;left:0;width:50mm;height:50mm;transform:rotate(180deg);}
-.cs-tl{top:0;left:0;width:33mm;height:33mm;}
-.cs-br{bottom:0;right:0;width:33mm;height:33mm;transform:rotate(180deg);}
-
-/* ── Watermark ── */
-.wm-img{
-  position:absolute;top:10mm;left:10mm;
-  width:200px;height:auto;
-  opacity:0.1;
-  filter:brightness(0);
-  pointer-events:none;z-index:0;
-}
-.wm-text{
-  position:absolute;top:50%;left:50%;
-  transform:translate(-50%,-50%) rotate(-10deg);
-  font-size:32mm;font-weight:900;
-  color:#4B96CE;opacity:0.06;
-  letter-spacing:3mm;white-space:nowrap;
-  pointer-events:none;z-index:0;
-}
-
-/* ══════════ Content ══════════ */
-.content{
-  position:relative;z-index:4;
-  width:100%;display:flex;flex-direction:column;
-  align-items:center;flex:1;
-}
-
-/* 1. Title */
-.title{
-  font-family:'Noto Naskh Arabic','Cairo',sans-serif;
-  font-size:17mm;font-weight:900;
-  letter-spacing:2mm;text-align:center;
-  line-height:1.15;margin-bottom:1.5mm;
-  background:linear-gradient(90deg,#4B96CE 0%,#87C781 100%);
-  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
-}
-
-/* Title ornamental underline */
-.title-orn{
-  display:flex;align-items:center;gap:0;
-  width:80mm;margin-bottom:3.5mm;
-}
-.t-seg{height:0;flex:1;border-top:0.6mm solid #C9A84C;}
-.t-seg2{height:0;flex:1;border-top:0.25mm solid #C9A84C88;}
-.t-diamond{
-  width:3.5mm;height:3.5mm;background:#C9A84C;
-  transform:rotate(45deg);flex-shrink:0;margin:0 2mm;
-}
-.t-dot{
-  width:1.5mm;height:1.5mm;background:#C9A84C88;
-  border-radius:50%;flex-shrink:0;margin:0 1.5mm;
-}
-
-/* 2. Intro */
-.intro{
-  font-size:4.8mm;color:#555;
-  text-align:center;margin-bottom:3mm;
-}
-
-/* 3. Student name */
-.student-row{
-  display:flex;flex-direction:row;
-  align-items:center;justify-content:center;
-  gap:2mm;margin-bottom:2.5mm;width:100%;
-}
-.name-band{
-  display:flex;flex-direction:row;align-items:center;gap:2mm;
-  background:linear-gradient(90deg,transparent,#4B96CE14,#4B96CE20,#4B96CE14,transparent);
-  padding:2mm 8mm;border-radius:0.5mm;
-}
-.honorific{
-  font-size:6.5mm;font-weight:700;
-  color:#4B96CE;white-space:nowrap;flex-shrink:0;
-}
-.student-name{
-  font-size:${nameFz}mm;font-weight:900;
-  color:#1a1a2e;white-space:nowrap;
-}
-
-/* 4. Double gold divider */
-.divider{
-  width:70%;display:flex;flex-direction:column;
-  align-items:center;gap:1.2mm;margin:1.5mm auto 2.5mm;
-}
-.div-row{display:flex;align-items:center;gap:2mm;width:100%;}
-.div-line{height:0;flex:1;}
-.div-line-top{border-top:0.5mm solid #C9A84C;}
-.div-line-bot{border-top:0.25mm solid #C9A84C77;}
-.div-orn{display:flex;align-items:center;gap:1.5mm;flex-shrink:0;}
-.diam-big{width:4mm;height:4mm;background:#C9A84C;transform:rotate(45deg);}
-.diam-sm{width:2mm;height:2mm;background:#87C781;transform:rotate(45deg);}
-.star-gold{font-size:4.5mm;color:#C9A84C;}
-
-/* 5. Course */
-.course-row{
-  font-size:5.2mm;color:#333;
-  text-align:center;margin-bottom:2mm;white-space:nowrap;
-}
-.course-name{font-size:${courseFz}mm;font-weight:800;color:#1a5c94;}
-
-/* 6. Trainer */
-.trainer-row{font-size:4.8mm;color:#444;text-align:center;margin-bottom:1.5mm;}
-
-/* 7. Date */
-.date-row{
-  font-size:4.5mm;color:#555;text-align:center;
-  direction:ltr;unicode-bidi:embed;
-}
-
-/* ══════════ Bottom strip ══════════ */
-.bottom-strip{
-  position:relative;z-index:4;
-  width:100%;
-  background:linear-gradient(90deg,
-    transparent 0%,#4B96CE12 20%,#4B96CE18 50%,#4B96CE12 80%,transparent 100%);
-  border-top:0.25mm solid #C9A84C55;
-  margin-top:3mm;padding:2mm 3mm 0;
-  display:flex;flex-direction:row;
-  align-items:flex-end;justify-content:space-between;
-}
-
-/* Bottom columns */
-.col{display:flex;flex-direction:column;align-items:center;gap:1mm;min-width:40mm;}
-
-/* Stamp overlapping admin sig */
-.stamp-sig-wrap{
-  position:relative;width:38mm;height:28mm;
-  display:flex;align-items:flex-end;justify-content:center;
-}
-.admin-sig-img{
-  position:absolute;bottom:0;left:50%;
-  transform:translateX(-50%);
-  height:13mm;max-width:36mm;object-fit:contain;z-index:1;
-}
-.stamp-img{
-  position:absolute;top:0;left:50%;
-  transform:translateX(-50%);
-  height:22mm;width:22mm;object-fit:contain;
-  opacity:0.85;z-index:2;
-}
-.sig-img{height:13mm;max-width:38mm;object-fit:contain;}
-.sig-placeholder{height:13mm;}
-.col-line{width:40mm;height:0;border-top:0.35mm solid #888;margin-top:1mm;}
-.col-label{font-size:3.5mm;color:#555;text-align:center;margin-top:0.5mm;}
-
-/* Inner border corner accents */
-.ic{position:absolute;z-index:2;}
-.ic-dot{width:3mm;height:3mm;border-radius:50%;}
-.ic-tr{top:7.5mm;right:7.5mm;}.ic-tl{top:7.5mm;left:7.5mm;}
-.ic-br{bottom:7.5mm;right:7.5mm;}.ic-bl{bottom:7.5mm;left:7.5mm;}
-
-/* Colored bar under title */
-.title-bar{
-  width:60mm;height:1.2mm;
-  background:linear-gradient(90deg,#4B96CE,#87C781,#C9A84C);
-  border-radius:1mm;margin-bottom:2mm;
-}
-
-/* Medal */
-.medal-img{height:28mm;width:auto;object-fit:contain;}
-.logo-name{font-size:6mm;font-weight:900;color:#4B96CE;letter-spacing:1.2mm;line-height:1;margin:0;}
-.logo-sub{font-size:3mm;color:#777;letter-spacing:0.5mm;font-weight:700;line-height:1;margin:0;}
-
-/* Sig removed */
-.sig-img{display:none;}.sig-placeholder{display:none;}
+.row{position:absolute;left:0;right:0;text-align:center;line-height:1.25;}
 </style>
 </head>
 <body>
 <div class="cert">
 
-  <!-- Borders -->
-  <div class="b-outer"></div>
-  <div class="b-inner"></div>
-
-  <!-- Corner gold diamond ornaments (outer border) -->
-  <div class="corner-gem cg-tr"></div>
-  <div class="corner-gem cg-tl"></div>
-  <div class="corner-gem cg-br"></div>
-  <div class="corner-gem cg-bl"></div>
-  <!-- Corner gold diamond ornaments (inner border) -->
-  <div class="corner-gem2 cg2-tr"></div>
-  <div class="corner-gem2 cg2-tl"></div>
-  <div class="corner-gem2 cg2-br"></div>
-  <div class="corner-gem2 cg2-bl"></div>
-
-  <!-- Inner border corner accent dots -->
-  <div class="ic ic-tr ic-dot" style="background:#87C781"></div>
-  <div class="ic ic-tl ic-dot" style="background:#4B96CE"></div>
-  <div class="ic ic-br ic-dot" style="background:#4B96CE"></div>
-  <div class="ic ic-bl ic-dot" style="background:#87C781"></div>
-
-  <!-- Decorative corners: TR green, BL blue -->
-  <div class="corner-svg cs-tr">${TRIANGLE_TR_SVG}</div>
-  <div class="corner-svg cs-bl">${TRIANGLE_BL_SVG}</div>
-  <!-- Decorative corners: gold arcs TL + BR -->
-  <div class="corner-svg cs-tl">${ARC_SVG}</div>
-  <div class="corner-svg cs-br">${ARC_SVG}</div>
-
-  <!-- Watermark -->
-  ${wmTag}
-
-  <!-- ───── Main content ───── -->
-  <div class="content">
-
-    <div class="title">شهادة إتمام</div>
-    <div class="title-bar"></div>
-
-    <div class="title-orn">
-      <div class="t-seg"></div>
-      <div class="t-dot"></div>
-      <div class="t-diamond"></div>
-      <div class="t-dot"></div>
-      <div class="t-seg"></div>
-      <div class="t-seg2" style="max-width:40px"></div>
-    </div>
-
-    <div class="intro">تشهد شركة ELITE للبحث والتطوير التجريبي في علم النفس بأن</div>
-
-    <div class="student-row">
-      <div class="name-band">
-        <span class="honorific">${esc(honorific)}</span>
-        <span class="student-name">${esc(studentName)}</span>
-      </div>
-    </div>
-
-    <!-- Double divider -->
-    <div class="divider">
-      <div class="div-row">
-        <div class="div-line div-line-top"></div>
-        <div class="div-orn">
-          <div class="diam-sm"></div>
-          <div class="diam-big"></div>
-          <span class="star-gold">✦</span>
-          <div class="diam-big"></div>
-          <div class="diam-sm"></div>
-        </div>
-        <div class="div-line div-line-top"></div>
-      </div>
-      <div class="div-row">
-        <div class="div-line div-line-bot"></div>
-        <div class="div-line div-line-bot" style="max-width:60px"></div>
-      </div>
-    </div>
-
-    <div class="course-row">
-      ${esc(completedVerb)}&ensp;<span class="course-name">${esc(courseName)}</span>
-    </div>
-
-    <div class="trainer-row">
-      تقديم:&ensp;<strong>${esc(trainerName)}</strong>&emsp;،&ensp;يوم ${esc(dayName)}
-    </div>
-    <div class="date-row">الموافق:&ensp;${esc(dateEnglish)}</div>
-
+  <!-- ① Title -->
+  <div class="row" style="
+    top:${p(Y_TITLE)}px;
+    font-family:'Noto Naskh Arabic','Cairo',sans-serif;
+    font-size:${p(100)}px;font-weight:900;color:#2C5F8A;letter-spacing:1px;">
+    شهادة إتمام
   </div>
 
-  <!-- ───── Bottom strip ───── -->
-  <div class="bottom-strip" style="justify-content:center;gap:20mm;">
+  <!-- ② Intro -->
+  <div class="row" style="
+    top:${p(Y_INTRO)}px;
+    font-size:${p(41)}px;color:#444;">
+    تشهد شركة ELITE للبحث والتطوير التجريبي في علم النفس بأن
+  </div>
 
-    <!-- RIGHT: stamp overlapping admin sig -->
-    <div class="col">
-      <div class="stamp-sig-wrap">
-        ${adminSigTag}
-        ${stampOverlay}
-      </div>
-      <div class="col-line"></div>
-      <div class="col-label">توقيع الإدارة</div>
-    </div>
+  <!-- ③ Honorific + Student name -->
+  <div style="
+    position:absolute;top:${p(Y_NAME)}px;left:0;right:0;
+    display:flex;justify-content:center;align-items:baseline;
+    direction:rtl;gap:${p(22)}px;">
+    <span style="color:#4B96CE;font-size:${p(60)}px;font-weight:700;white-space:nowrap;">
+      ${esc(honorific)}
+    </span>
+    <span style="color:#1a1a2e;font-size:${p(nameFt)}px;font-weight:900;white-space:nowrap;">
+      ${esc(studentName)}
+    </span>
+  </div>
 
-    <!-- CENTER: medal + ELITE COMPANY -->
-    <div class="col">
-      ${medalTag}
-      <div style="display:flex;flex-direction:column;align-items:center;gap:0;line-height:1;">
-        <div class="logo-name">ELITE</div>
-        <div class="logo-sub">COMPANY</div>
-      </div>
-    </div>
+  <!-- ④ Course -->
+  <div class="row" style="
+    top:${p(Y_COURSE)}px;
+    font-size:${p(43)}px;color:#333;">
+    ${esc(completedVerb)}&ensp;<span style="color:#2C5F8A;font-size:${p(crseFt)}px;font-weight:800;">
+      ${esc(courseName)}
+    </span>
+  </div>
 
+  <!-- ⑤ Trainer + Day -->
+  <div class="row" style="
+    top:${p(Y_TRAINER)}px;
+    font-size:${p(40)}px;color:#555;">
+    تقديم:&ensp;<strong style="color:#333;">${esc(trainerName)}</strong>&emsp;،&ensp;يوم ${esc(dayName)}
+  </div>
+
+  <!-- ⑥ Date -->
+  <div class="row" style="
+    top:${p(Y_DATE)}px;
+    font-size:${p(40)}px;color:#555;">
+    الموافق:&ensp;<strong style="color:#333;">${esc(dateEnglish)}</strong>
+  </div>
+
+  <!-- ⑦ Horizontal divider -->
+  <div style="
+    position:absolute;top:${p(Y_HR)}px;
+    left:${p(130)}px;right:${p(130)}px;
+    height:1px;background:rgba(75,150,206,0.25);"></div>
+
+  <!-- ⑧ Medal — center -->
+  ${medalEl}
+
+  <!-- ⑨ "ELITE COMPANY" — below medal -->
+  <div class="row" style="
+    top:${p(Y_ELITE)}px;
+    font-size:${p(46)}px;font-weight:900;color:#4B96CE;letter-spacing:3px;">
+    ELITE COMPANY
+  </div>
+
+  <!-- ⑩ Stamp + Sig wrapper — right column
+       Stamp (z-index:2, opacity:0.85) overlaps Sig (z-index:1) by ~70px -->
+  <div style="
+    position:absolute;
+    top:${p(Y_IMG)}px;right:${p(WRAP_R)}px;
+    width:${p(WRAP_W)}px;height:${p(WRAP_H)}px;">
+    ${sigInner}
+    ${stampInner}
+  </div>
+
+  <!-- ⑪ "توقيع الإدارة" — below stamp+sig wrapper -->
+  <div style="
+    position:absolute;
+    top:${p(Y_SIG_LBL) - 10}px;right:${p(WRAP_R) + 15}px;
+    width:${p(WRAP_W)}px;text-align:center;
+    font-size:${p(40)}px;color:#555;">
+    توقيع الإدارة
   </div>
 
 </div>
