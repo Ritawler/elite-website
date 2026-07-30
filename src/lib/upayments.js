@@ -42,6 +42,7 @@ export async function createCharge({ orderId, amount, description, returnUrl, ca
   });
 
   const data = await res.json();
+  console.error("[UPayments createCharge] status:", res.status, "body:", JSON.stringify(data));
   if (!res.ok || !data?.status || !data?.data?.link) {
     return { ok: false, error: data?.message || "تعذّر إنشاء رابط الدفع" };
   }
