@@ -20,32 +20,38 @@ export async function createCharge({ orderId, amount, description, customerUniqu
   }
 
   const chargeUrl = `${BASE_URL}/charge`;
-  console.error("[UPayments createCharge] hitting:", chargeUrl, "BASE_URL_SET:", !!BASE_URL, "KEY_SET:", !!API_KEY);
+  const requestBody = {
+    order: {
+      id: orderId,
+      reference: orderId,
+      description,
+      currency: "KWD",
+      amount,
+    },
+    paymentGateway: { src: "knet" },
+    language: "ar",
+    reference: { id: orderId },
+    customer: {
+      uniqueId: customerUniqueId,
+      name: customerName,
+      email: customerEmail,
+      mobile: "+96500000000",
+    },
+    returnUrl,
+    cancelUrl,
+    notificationUrl,
+  };
+  const requestHeaders = {
+    "Content-Type": "application/json",
+    Authorization: `Bearer ${API_KEY}`,
+  };
+  console.error("[UPayments] URL:", chargeUrl);
+  console.error("[UPayments] Headers:", JSON.stringify(requestHeaders));
+  console.error("[UPayments] Body:", JSON.stringify(requestBody));
   const res = await fetch(chargeUrl, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      token: API_KEY,
-      order: {
-        id: orderId,
-        reference: orderId,
-        description,
-        currency: "KWD",
-        amount,
-      },
-      paymentGateway: { src: "knet" },
-      language: "ar",
-      reference: { id: orderId },
-      customer: {
-        uniqueId: customerUniqueId,
-        name: customerName,
-        email: customerEmail,
-        mobile: "+96500000000",
-      },
-      returnUrl,
-      cancelUrl,
-      notificationUrl,
-    }),
+    headers: requestHeaders,
+    body: JSON.stringify(requestBody),
   });
 
   const raw = await res.text();
