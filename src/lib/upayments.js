@@ -45,9 +45,6 @@ export async function createCharge({ orderId, amount, description, customerUniqu
     "Content-Type": "application/json",
     Authorization: `Bearer ${API_KEY}`,
   };
-  console.error("[UPayments] URL:", chargeUrl);
-  console.error("[UPayments] Headers:", JSON.stringify(requestHeaders));
-  console.error("[UPayments] Body:", JSON.stringify(requestBody));
   const res = await fetch(chargeUrl, {
     method: "POST",
     headers: requestHeaders,
@@ -55,7 +52,6 @@ export async function createCharge({ orderId, amount, description, customerUniqu
   });
 
   const raw = await res.text();
-  console.error("[UPayments createCharge] status:", res.status, "raw:", raw.slice(0, 500));
   let data;
   try { data = JSON.parse(raw); } catch { data = null; }
   if (!res.ok || !data?.status || !data?.data?.link) {
