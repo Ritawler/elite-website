@@ -15,7 +15,6 @@ export default async function PaymentFailedPage({ searchParams }) {
     (Array.isArray(params?.order_id) ? params.order_id[0] : params?.order_id)?.split("?")[0];
   const trackId = params?.track_id || null;
 
-  console.error("[PaymentFailed] orderId:", orderId, "trackId:", trackId, "result:", params?.result);
 
   if (orderId && trackId) {
     const supabase = await createClient();

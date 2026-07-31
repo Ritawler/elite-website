@@ -9,7 +9,6 @@ export default async function PaymentSuccessPage({ searchParams }) {
   const orderId = params?.requested_order_id ||
     (Array.isArray(params?.order_id) ? params.order_id[0] : params?.order_id)?.split("?")[0];
   const trackId = params?.track_id || params?.trackId || null;
-  console.error("[PaymentSuccess] orderId:", orderId, "trackId:", trackId);
 
   const supabase = await createClient();
   const {
