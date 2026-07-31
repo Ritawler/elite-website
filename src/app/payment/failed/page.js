@@ -1,6 +1,10 @@
 import Header from "@/components/Header";
 
-export default function PaymentFailedPage() {
+export default async function PaymentFailedPage({ searchParams }) {
+  const params = await searchParams;
+  // Temporary: log everything UPayments sends back so we can debug the sandbox flow
+  console.error("[PaymentFailed] searchParams:", JSON.stringify(params));
+
   return (
     <>
       <Header />
