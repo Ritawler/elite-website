@@ -65,11 +65,16 @@ export async function checkPaymentStatus(trackId) {
     return { ok: true, result: "CAPTURED", status: "done" };
   }
 
-  const res = await fetch(`${BASE_URL}/get-payment-status/${encodeURIComponent(trackId)}`, {
+  const statusUrl = `${BASE_URL}/get-payment-status/${encodeURIComponent(trackId)}`;
+  console.error("[UPayments checkPaymentStatus] url:", statusUrl);
+  const res = await fetch(statusUrl, {
     headers: { Authorization: `Bearer ${API_KEY}` },
   });
 
-  const data = await res.json();
+  const raw = await res.text();
+  console.error("[UPayments checkPaymentStatus] status:", res.status, "raw:", raw.slice(0, 500));
+  let data;
+  try { data = JSON.parse(raw); } catch { data = null; }
   const transaction = data?.data?.transaction;
   if (!res.ok || !data?.status || !transaction) {
     return { ok: false, error: data?.message || "تعذّر التحقق من حالة الدفع" };

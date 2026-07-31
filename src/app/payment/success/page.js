@@ -5,8 +5,11 @@ import Header from "@/components/Header";
 
 export default async function PaymentSuccessPage({ searchParams }) {
   const params = await searchParams;
-  const orderId = params?.order_id;
+  // UPayments pollutes order_id — use requested_order_id when available
+  const orderId = params?.requested_order_id ||
+    (Array.isArray(params?.order_id) ? params.order_id[0] : params?.order_id)?.split("?")[0];
   const trackId = params?.track_id || params?.trackId || null;
+  console.error("[PaymentSuccess] orderId:", orderId, "trackId:", trackId);
 
   const supabase = await createClient();
   const {
