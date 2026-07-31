@@ -6,6 +6,7 @@ import Header from "@/components/Header";
 export default async function PaymentSuccessPage({ searchParams }) {
   const params = await searchParams;
   const orderId = params?.order_id;
+  const trackId = params?.track_id || params?.trackId || null;
 
   const supabase = await createClient();
   const {
@@ -29,7 +30,7 @@ export default async function PaymentSuccessPage({ searchParams }) {
   if (!payment) {
     outcome = { ok: false, reason: "not_found" };
   } else {
-    outcome = await confirmPayment({ orderId, trackId: null });
+    outcome = await confirmPayment({ orderId, trackId });
   }
 
   const { data: course } = payment
