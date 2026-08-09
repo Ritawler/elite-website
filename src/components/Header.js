@@ -119,7 +119,7 @@ export default function Header() {
                 تواصل معنا
               </a>
             </li>
-            <li>
+            <li className="nav-desktop-hidden">
               <Link href="/topics" className="nav-link">
                 مواضيع الأعضاء
               </Link>

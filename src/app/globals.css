@@ -179,7 +179,7 @@ p{ margin: 0 0 1em; color: var(--text-muted); }
 }
 
 .hamburger{
-  display: none;
+  display: flex;
   flex-direction: column;
   justify-content: center;
   gap: 5px;
@@ -699,7 +699,6 @@ p{ margin: 0 0 1em; color: var(--text-muted); }
   .main-nav.open{ max-height: 480px; }
   .main-nav ul{ flex-direction: column; padding: 12px 24px 20px; gap: 4px; }
   .nav-link{ display: block; padding: 12px 16px; }
-  .hamburger{ display: flex; }
   .brand-text small{ display: none; }
 
   .hero{ padding: 80px 0 60px; }
@@ -1018,8 +1017,34 @@ p{ margin: 0 0 1em; color: var(--text-muted); }
 }
 .note-editor .note-editor-content p{ margin: 0 0 0.6em; color: var(--text); }
 
-/* Nav items hidden in the top bar but visible in the hamburger menu */
+/* Nav items hidden in the top bar — visible only inside the hamburger menu */
 .nav-desktop-hidden { display: none; }
-@media (max-width: 768px) {
-  .main-nav.open .nav-desktop-hidden { display: list-item; }
+.main-nav.open .nav-desktop-hidden { display: list-item; }
+
+/* Desktop hamburger dropdown (slides in from the left in RTL layout) */
+@media (min-width: 769px) {
+  .main-nav.open {
+    position: fixed;
+    top: 96px;
+    left: 0;
+    width: 220px;
+    max-height: calc(100vh - 96px);
+    overflow-y: auto;
+    background: #fff;
+    border-inline-end: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+    border-radius: 0 0 12px 0;
+    box-shadow: 4px 8px 24px rgba(0,0,0,0.1);
+    z-index: 1000;
+  }
+  .main-nav.open ul {
+    flex-direction: column;
+    padding: 8px 0 16px;
+    gap: 0;
+  }
+  .main-nav.open li { display: list-item; }
+  .main-nav.open .nav-link { display: block; padding: 12px 24px; text-align: right; }
 }
+
+/* Homepage sections hidden from main view */
+#team, #cpd, #blog { display: none; }
