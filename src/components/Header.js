@@ -84,7 +84,7 @@ export default function Header() {
                 عن إيليت
               </a>
             </li>
-            <li>
+            <li className="nav-desktop-hidden">
               <a href="/#team" className="nav-link" data-ar="الأعضاء" data-en="Members">
                 الأعضاء
               </a>
@@ -94,7 +94,7 @@ export default function Header() {
                 الدورات
               </a>
             </li>
-            <li>
+            <li className="nav-desktop-hidden">
               <a href="/#cpd" className="nav-link" data-ar="الاعتماد المهني" data-en="CPD">
                 الاعتماد المهني
               </a>
@@ -109,7 +109,7 @@ export default function Header() {
                 استبصار
               </a>
             </li>
-            <li>
+            <li className="nav-desktop-hidden">
               <a href="/#blog" className="nav-link" data-ar="المدونة" data-en="Blog">
                 المدونة
               </a>

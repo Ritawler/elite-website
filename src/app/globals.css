@@ -1017,3 +1017,9 @@ p{ margin: 0 0 1em; color: var(--text-muted); }
   line-height: 1.8;
 }
 .note-editor .note-editor-content p{ margin: 0 0 0.6em; color: var(--text); }
+
+/* Nav items hidden in the top bar but visible in the hamburger menu */
+.nav-desktop-hidden { display: none; }
+@media (max-width: 768px) {
+  .main-nav.open .nav-desktop-hidden { display: list-item; }
+}
