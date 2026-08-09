@@ -381,6 +381,61 @@ p{ margin: 0 0 1em; color: var(--text-muted); }
 }
 
 /* ==========================================================================
+   Org Chart (Team Hierarchy)
+   ========================================================================== */
+.org-chart{
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  overflow-x: auto;
+  padding: 8px 16px 24px;
+  width: 100%;
+}
+
+/* Vertical connector lines (down from parent / up to parent) */
+.org-vdown, .org-vup{
+  width: 2px;
+  height: 24px;
+  background: var(--primary);
+  flex-shrink: 0;
+  align-self: center;
+}
+
+/* Row of sibling nodes — border-top is the horizontal connector bar */
+.org-row{
+  display: flex;
+  flex-direction: row;
+  gap: 16px;
+  border-top: 2px solid var(--primary);
+  min-width: fit-content;
+}
+
+/* Single child: no horizontal bar, just straight vertical line */
+.org-row:has(> .org-arm:only-child){
+  border-top: none;
+}
+
+/* Each branch: card stacked vertically, centered */
+.org-arm{
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+/* Compact card sizing inside org chart */
+.org-chart .team-card{
+  width: 160px;
+  padding: 16px 12px;
+}
+.org-chart .team-card h3{ font-size: 14px; }
+.org-chart .team-card p{  font-size: 12px; line-height: 1.4; }
+.org-chart .team-avatar{  width: 60px; height: 60px; font-size: 16px; margin-bottom: 8px; }
+.org-chart .team-card-lead{ width: 200px; }
+.org-chart .team-card-lead h3{ font-size: 17px; }
+.org-chart .team-card-lead .team-avatar{ width: 90px; height: 90px; font-size: 22px; }
+
+/* ==========================================================================
    Coming Soon Cards (Courses / Events)
    ========================================================================== */
 .soon-card{
@@ -1049,3 +1104,10 @@ p{ margin: 0 0 1em; color: var(--text-muted); }
 /* Homepage sections hidden from main view, but shown when navigated to via hash link */
 #team, #cpd, #blog { display: none; }
 #team:target, #cpd:target, #blog:target { display: block; }
+
+/* Force reveal animations to show inside hash-targeted sections
+   (IntersectionObserver ran before these sections were visible) */
+#team:target .reveal, #cpd:target .reveal, #blog:target .reveal {
+  opacity: 1;
+  transform: translateY(0);
+}

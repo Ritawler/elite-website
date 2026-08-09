@@ -76,63 +76,112 @@ export const homeSections = `
       <p data-ar="فريق إيليت الإداري" data-en="ELITE's Management Team">فريق إيليت الإداري</p>
     </div>
 
-    <div class="team-lead reveal">
+    <!-- Org Chart: tree layout -->
+    <div class="org-chart reveal">
+
+      <!-- Root: محمد الهلال -->
       <div class="team-card team-card-lead">
         <div class="team-avatar" data-ar="م ه" data-en="MH">م ه</div>
         <h3 data-ar="محمد الهلال" data-en="Mohammad Al-Helal">محمد الهلال</h3>
         <p data-ar="الرئيس" data-en="President">الرئيس</p>
       </div>
-    </div>
+      <div class="org-vdown"></div>
 
-    <div class="team-grid">
-      <div class="team-card reveal">
-        <div class="team-avatar" data-ar="ل ب" data-en="LB">ل ب</div>
-        <h3 data-ar="لولوة البندر" data-en="Lulwa Al-Bandar">لولوة البندر</h3>
-        <p data-ar="نائب الرئيس ورئيس قسم الأرشفة" data-en="Vice President &amp; Head of Archiving Department">نائب الرئيس ورئيس قسم الأرشفة</p>
-      </div>
+      <!-- Level 1: لولوة البندر ← → محمد حسين -->
+      <div class="org-row">
 
-      <div class="team-card reveal">
-        <div class="team-avatar" data-ar="م ح" data-en="MH">م ح</div>
-        <h3 data-ar="محمد حسين" data-en="Mohammad Hussain">محمد حسين</h3>
-        <p data-ar="مساعد نائب الرئيس ورئيس قسم الموارد البشرية" data-en="Assistant Vice President &amp; Head of HR Department">مساعد نائب الرئيس ورئيس قسم الموارد البشرية</p>
-      </div>
+        <!-- Branch A: لولوة البندر → علي الساعدي → عمر + ريم -->
+        <div class="org-arm">
+          <div class="org-vup"></div>
+          <div class="team-card">
+            <div class="team-avatar" data-ar="ل ب" data-en="LB">ل ب</div>
+            <h3 data-ar="لولوة البندر" data-en="Lulwa Al-Bandar">لولوة البندر</h3>
+            <p data-ar="نائب الرئيس ورئيس قسم الأرشفة" data-en="Vice President &amp; Head of Archiving">نائب الرئيس ورئيس قسم الأرشفة</p>
+          </div>
+          <div class="org-vdown"></div>
 
-      <div class="team-card reveal">
-        <div class="team-avatar" data-ar="إ ظ" data-en="ED">إ ظ</div>
-        <h3 data-ar="إيمان الظفيري" data-en="Eman Al-Dhafiri">إيمان الظفيري</h3>
-        <p data-ar="رئيس قسم الإعلامية" data-en="Head of Media Department">رئيس قسم الإعلامية</p>
-      </div>
+          <!-- Level 2A: علي الساعدي (single child) -->
+          <div class="org-row">
+            <div class="org-arm">
+              <div class="org-vup"></div>
+              <div class="team-card">
+                <div class="team-avatar" data-ar="ع س" data-en="AS">ع س</div>
+                <h3 data-ar="علي الساعدي" data-en="Ali Al-Saadi">علي الساعدي</h3>
+                <p data-ar="رئيس قسم التدريب والتطوير" data-en="Head of Training &amp; Development">رئيس قسم التدريب والتطوير</p>
+              </div>
+              <div class="org-vdown"></div>
 
-      <div class="team-card reveal">
-        <div class="team-avatar" data-ar="ع س" data-en="AA">ع س</div>
-        <h3 data-ar="علي الساعدي" data-en="Ali Al-Saadi">علي الساعدي</h3>
-        <p data-ar="رئيس قسم التدريب والتطوير" data-en="Head of Training &amp; Development Department">رئيس قسم التدريب والتطوير</p>
-      </div>
+              <!-- Level 3A: عمر النصافي + ريم الحمود -->
+              <div class="org-row">
+                <div class="org-arm">
+                  <div class="org-vup"></div>
+                  <div class="team-card">
+                    <div class="team-avatar" data-ar="ع ن" data-en="ON">ع ن</div>
+                    <h3 data-ar="عمر النصافي" data-en="Omar Al-Nesafi">عمر النصافي</h3>
+                    <p data-ar="عضو إداري، التدريب والتطوير" data-en="Board Member, Training &amp; Development">عضو إداري، التدريب والتطوير</p>
+                  </div>
+                </div>
+                <div class="org-arm">
+                  <div class="org-vup"></div>
+                  <div class="team-card">
+                    <div class="team-avatar" data-ar="ر ح" data-en="RH">ر ح</div>
+                    <h3 data-ar="ريم الحمود" data-en="Reem Al-Hamoud">ريم الحمود</h3>
+                    <p data-ar="عضو إداري، التدريب والتطوير" data-en="Board Member, Training &amp; Development">عضو إداري، التدريب والتطوير</p>
+                  </div>
+                </div>
+              </div><!-- /Level 3A -->
+            </div>
+          </div><!-- /Level 2A -->
+        </div><!-- /Branch A -->
 
-      <div class="team-card reveal">
-        <div class="team-avatar" data-ar="أ ب" data-en="AB">أ ب</div>
-        <h3 data-ar="أحمد البناي" data-en="Ahmad Al-Banai">أحمد البناي</h3>
-        <p data-ar="رئيس قسم العلاقات العامة" data-en="Head of Public Relations Department">رئيس قسم العلاقات العامة</p>
-      </div>
+        <!-- Branch B: محمد حسين → إيمان الظفيري + أحمد البناي -->
+        <div class="org-arm">
+          <div class="org-vup"></div>
+          <div class="team-card">
+            <div class="team-avatar" data-ar="م ح" data-en="MH">م ح</div>
+            <h3 data-ar="محمد حسين" data-en="Mohammad Hussain">محمد حسين</h3>
+            <p data-ar="مساعد نائب الرئيس ورئيس قسم الموارد البشرية" data-en="Assistant VP &amp; Head of HR">مساعد نائب الرئيس ورئيس قسم الموارد البشرية</p>
+          </div>
+          <div class="org-vdown"></div>
 
-      <div class="team-card reveal">
-        <div class="team-avatar" data-ar="ن س" data-en="NS">ن س</div>
-        <h3 data-ar="نورة السبيعي" data-en="Noura Al-Subaie">نورة السبيعي</h3>
-        <p data-ar="عضو إداري في قسم الإعلامية" data-en="Board Member, Media Department">عضو إداري في قسم الإعلامية</p>
-      </div>
+          <!-- Level 2B: إيمان الظفيري + أحمد البناي -->
+          <div class="org-row">
+            <div class="org-arm">
+              <div class="org-vup"></div>
+              <div class="team-card">
+                <div class="team-avatar" data-ar="إ ظ" data-en="ED">إ ظ</div>
+                <h3 data-ar="إيمان الظفيري" data-en="Eman Al-Dhafiri">إيمان الظفيري</h3>
+                <p data-ar="رئيس قسم الإعلامية" data-en="Head of Media Department">رئيس قسم الإعلامية</p>
+              </div>
+              <div class="org-vdown"></div>
 
-      <div class="team-card reveal">
-        <div class="team-avatar" data-ar="ع ن" data-en="ON">ع ن</div>
-        <h3 data-ar="عمر النصافي" data-en="Omar Al-Nesafi">عمر النصافي</h3>
-        <p data-ar="عضو إداري في قسم التدريب والتطوير" data-en="Board Member, Training &amp; Development Department">عضو إداري في قسم التدريب والتطوير</p>
-      </div>
+              <!-- Level 3B: نورة السبيعي (single child) -->
+              <div class="org-row">
+                <div class="org-arm">
+                  <div class="org-vup"></div>
+                  <div class="team-card">
+                    <div class="team-avatar" data-ar="ن س" data-en="NS">ن س</div>
+                    <h3 data-ar="نورة السبيعي" data-en="Noura Al-Subaie">نورة السبيعي</h3>
+                    <p data-ar="عضو إداري في قسم الإعلامية" data-en="Board Member, Media Dept.">عضو إداري في قسم الإعلامية</p>
+                  </div>
+                </div>
+              </div><!-- /Level 3B -->
+            </div>
 
-      <div class="team-card reveal">
-        <div class="team-avatar" data-ar="ر ح" data-en="RH">ر ح</div>
-        <h3 data-ar="ريم الحمود" data-en="Reem Al-Hamoud">ريم الحمود</h3>
-        <p data-ar="عضو إداري في قسم التدريب والتطوير" data-en="Board Member, Training &amp; Development Department">عضو إداري في قسم التدريب والتطوير</p>
-      </div>
-    </div>
+            <div class="org-arm">
+              <div class="org-vup"></div>
+              <div class="team-card">
+                <div class="team-avatar" data-ar="أ ب" data-en="AB">أ ب</div>
+                <h3 data-ar="أحمد البناي" data-en="Ahmad Al-Banai">أحمد البناي</h3>
+                <p data-ar="رئيس قسم العلاقات العامة" data-en="Head of Public Relations">رئيس قسم العلاقات العامة</p>
+              </div>
+            </div>
+          </div><!-- /Level 2B -->
+        </div><!-- /Branch B -->
+
+      </div><!-- /Level 1 -->
+
+    </div><!-- /org-chart -->
   </div>
 </section>
 
