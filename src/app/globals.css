@@ -1046,5 +1046,6 @@ p{ margin: 0 0 1em; color: var(--text-muted); }
   .main-nav.open .nav-link { display: block; padding: 12px 24px; text-align: right; }
 }
 
-/* Homepage sections hidden from main view */
+/* Homepage sections hidden from main view, but shown when navigated to via hash link */
 #team, #cpd, #blog { display: none; }
+#team:target, #cpd:target, #blog:target { display: block; }
