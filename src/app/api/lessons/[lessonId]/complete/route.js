@@ -103,11 +103,17 @@ export async function POST(request, { params }) {
 
   const studentName = enrollment?.certificate_name || profile?.full_name || user.email;
 
+  const now = new Date();
+  const days = ["الأحد","الاثنين","الثلاثاء","الأربعاء","الخميس","الجمعة","السبت"];
+  const dayName = days[now.getDay()];
+  const dateText = `${now.getFullYear()}/${String(now.getMonth()+1).padStart(2,"0")}/${String(now.getDate()).padStart(2,"0")}`;
+
   const pdfBuffer = await generateCertificatePdf({
     studentName,
     courseName: course.title,
     trainerName: trainerProfile?.full_name || "",
-    trainerSignatureUrl: course.trainer_signature_url,
+    dayName,
+    dateText,
     gender: profile?.gender,
   });
 

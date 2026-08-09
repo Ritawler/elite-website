@@ -42,7 +42,7 @@ async function asset(name) {
 
 export async function generateCertificatePdf({
   studentName, courseName, trainerName, dayName,
-  dateText, gender, trainerSignatureUrl,
+  dateText, gender,
 }) {
   const [font, stamp, adminSig, medal] = await Promise.all([
     getCairoFontBase64(),
@@ -58,7 +58,7 @@ export async function generateCertificatePdf({
   return renderFixedSizeHtmlToPdf(
     buildHtml({ font, tpl, stamp, adminSig, medal,
                 studentName, courseName, trainerName, dayName,
-                dateEnglish: toEn(dateText), honorific, completedVerb }),
+                dateEnglish: toEn(dateText ?? ""), honorific, completedVerb }),
     { width: 1123, height: 794 }
   );
 }
