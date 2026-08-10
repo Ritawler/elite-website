@@ -126,4 +126,37 @@
   var yearEl = document.getElementById("year");
   if (yearEl) yearEl.textContent = new Date().getFullYear();
 
+  // Reveal animations for hash-targeted hidden sections (#team, #cpd, #blog).
+  // IntersectionObserver runs before these sections are visible, so we trigger
+  // manually: reset reveals to hidden, then add .visible after a short delay
+  // so the CSS transition plays smoothly.
+  var HASH_SECTIONS = ["team", "cpd", "blog"];
+
+  function triggerRevealInSection(id) {
+    var section = document.getElementById(id);
+    if (!section) return;
+    var reveals = section.querySelectorAll(".reveal");
+    if (!reveals.length) return;
+    reveals.forEach(function (el) {
+      el.classList.remove("visible");
+      el.style.transitionDelay = "";
+    });
+    setTimeout(function () {
+      reveals.forEach(function (el, i) {
+        el.style.transitionDelay = (i % 4) * 0.08 + "s";
+        el.classList.add("visible");
+      });
+    }, 50);
+  }
+
+  function handleHash() {
+    var hash = window.location.hash.replace("#", "");
+    if (HASH_SECTIONS.indexOf(hash) !== -1) {
+      triggerRevealInSection(hash);
+    }
+  }
+
+  handleHash();
+  window.addEventListener("hashchange", handleHash);
+
 })();

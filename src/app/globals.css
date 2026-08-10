@@ -1105,9 +1105,3 @@ p{ margin: 0 0 1em; color: var(--text-muted); }
 #team, #cpd, #blog { display: none; }
 #team:target, #cpd:target, #blog:target { display: block; }
 
-/* Force reveal animations to show inside hash-targeted sections
-   (IntersectionObserver ran before these sections were visible) */
-#team:target .reveal, #cpd:target .reveal, #blog:target .reveal {
-  opacity: 1;
-  transform: translateY(0);
-}
