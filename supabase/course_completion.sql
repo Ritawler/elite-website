@@ -10,6 +10,7 @@ create table if not exists public.lesson_progress (
 );
 alter table public.lesson_progress enable row level security;
 
+drop policy if exists "Users view their own progress" on public.lesson_progress;
 create policy "Users view their own progress"
   on public.lesson_progress for select
   using (auth.uid() = user_id);
@@ -20,6 +21,7 @@ create policy "Users view their own progress"
 -- requires the lesson to be one this user can actually access — same
 -- exists() shape as lessons.sql's own select policy — so a direct REST
 -- call can't fabricate "completed" rows for lessons never watched.
+drop policy if exists "Users mark progress only for lessons they can access" on public.lesson_progress;
 create policy "Users mark progress only for lessons they can access"
   on public.lesson_progress for insert
   with check (
