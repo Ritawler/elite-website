@@ -130,7 +130,7 @@
   // IntersectionObserver runs before these sections are visible, so we trigger
   // manually: reset reveals to hidden, then add .visible after a short delay
   // so the CSS transition plays smoothly.
-  var HASH_SECTIONS = ["team", "cpd", "blog"];
+  var HASH_SECTIONS = ["team", "cpd", "blog", "topics"];
 
   function triggerRevealInSection(id) {
     var section = document.getElementById(id);

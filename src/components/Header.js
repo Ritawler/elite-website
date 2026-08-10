@@ -120,9 +120,9 @@ export default function Header() {
               </a>
             </li>
             <li className="nav-desktop-hidden">
-              <Link href="/topics" className="nav-link">
+              <a href="/#topics" className="nav-link">
                 مواضيع الأعضاء
-              </Link>
+              </a>
             </li>
           </ul>
         </nav>

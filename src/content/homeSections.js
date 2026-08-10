@@ -1,4 +1,4 @@
-export const homeSections = `
+export const homeSectionsTop = `
 <!-- ===== Hero / Home ===== -->
 <section class="hero" id="home">
   <div class="hero-bg" aria-hidden="true"></div>
@@ -341,6 +341,9 @@ export const homeSections = `
     </div>
   </div>
 </section>
+`;
+
+export const homeSectionsBottom = `
 
 <!-- ===== Contact ===== -->
 <section class="section section-alt" id="contact">

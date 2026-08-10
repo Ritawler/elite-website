@@ -81,6 +81,9 @@ export default async function AdminPanel() {
             <Link href="/control-panel-2026/evaluations" className="btn btn-primary">
               التقييم الشهري
             </Link>
+            <Link href="/control-panel-2026/member-topics" className="btn btn-primary">
+              مواضيع الأعضاء
+            </Link>
             <Link href="/reviews/trainer-requests" className="btn btn-outline">
               طلبات المدربين
             </Link>
