@@ -7,6 +7,7 @@ import StaffFileManager from "@/components/staff/StaffFileManager";
 import DepartmentFileManager from "@/components/staff/DepartmentFileManager";
 import MyTasksList from "@/components/staff/MyTasksList";
 import DepartmentTasksManager from "@/components/staff/DepartmentTasksManager";
+import AdminDepartmentTaskCreator from "@/components/admin/AdminDepartmentTaskCreator";
 import StaffEvaluationsList from "@/components/staff/StaffEvaluationsList";
 
 export default async function StaffDashboard() {
@@ -26,9 +27,10 @@ export default async function StaffDashboard() {
   const departmentId = profile?.department_id || null;
 
   const { data: departmentRow } = departmentId
-    ? await supabase.from("departments").select("name").eq("id", departmentId).single()
+    ? await supabase.from("departments").select("name, is_director_dept").eq("id", departmentId).single()
     : { data: null };
   const departmentName = departmentRow?.name;
+  const isDirectorDept = departmentRow?.is_director_dept === true;
 
   const { data: noteFile } = await supabase.storage
     .from("staff-files")
@@ -66,6 +68,39 @@ export default async function StaffDashboard() {
     .from("departments")
     .select("id, name")
     .eq("manager_id", user.id);
+
+  // Director-dept members can assign tasks across all departments
+  let directorDepts = [];
+  let directorStaff = [];
+  let directorCreatedTasks = [];
+  if (isDirectorDept) {
+    const { data: allDepts } = await supabase
+      .from("departments")
+      .select("id, name")
+      .order("name");
+    directorDepts = allDepts || [];
+
+    const { data: allStaff } = await supabase
+      .from("users")
+      .select("id, full_name, email, department_id")
+      .eq("role", "staff");
+    directorStaff = allStaff || [];
+
+    const { data: createdByMe } = await supabase
+      .from("department_tasks")
+      .select(
+        "id, title, is_done, department_id, " +
+        "dept:departments!department_tasks_department_id_fkey(name), " +
+        "member:users!department_tasks_assigned_to_fkey(full_name, email)"
+      )
+      .eq("created_by", user.id)
+      .order("created_at", { ascending: false });
+    directorCreatedTasks = (createdByMe || []).map((t) => ({
+      ...t,
+      department_name: t.dept?.name || "",
+      assignee_name: t.member?.full_name || t.member?.email || "عضو",
+    }));
+  }
 
   const managedSections = [];
   for (const dept of managedDepartments || []) {
@@ -128,6 +163,18 @@ export default async function StaffDashboard() {
           <h2>تقييماتي الشهرية</h2>
           <StaffEvaluationsList evaluations={myEvaluations || []} />
         </div>
+
+        {isDirectorDept && (
+          <div className="dash-section">
+            <h2>تفويض مهام (صلاحية المدير/الرئيس)</h2>
+            <AdminDepartmentTaskCreator
+              departments={directorDepts}
+              staffUsers={directorStaff}
+              createdTasks={directorCreatedTasks}
+              currentUserId={user.id}
+            />
+          </div>
+        )}
 
         {managedSections.map(({ department, members, createdTasks }) => (
           <div className="dash-section" key={department.id}>
