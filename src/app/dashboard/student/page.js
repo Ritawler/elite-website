@@ -5,6 +5,7 @@ import CourseComments from "@/components/dashboard/CourseComments";
 import CourseMessageThread from "@/components/dashboard/CourseMessageThread";
 import CourseLessons from "@/components/dashboard/CourseLessons";
 import TrainerRequestBox from "@/components/dashboard/TrainerRequestBox";
+import MyCertificatesList from "@/components/dashboard/MyCertificatesList";
 
 export default async function StudentDashboard() {
   const supabase = await createClient();
@@ -134,32 +135,12 @@ export default async function StudentDashboard() {
 
         <div className="dash-section">
           <h2>شهاداتي</h2>
-          {!certificates || certificates.length === 0 ? (
-            <p className="dash-empty">ما عندك شهادات صادرة بعد.</p>
-          ) : (
-            <div className="dashboard-card">
-              {certificates.map((cert) => {
-                const course = enrollments?.find((e) => e.course?.id === cert.course_id)?.course;
-                return (
-                  <div className="cert-item" key={cert.id}>
-                    <span>{course?.title || "دورة"}</span>
-                    {cert.certificate_url ? (
-                      <a
-                        href={cert.certificate_url}
-                        target="_blank"
-                        rel="noopener"
-                        className="btn btn-outline"
-                      >
-                        تحميل الشهادة
-                      </a>
-                    ) : (
-                      <span className="cert-pending">قيد الإصدار</span>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-          )}
+          <MyCertificatesList
+            certificates={certificates}
+            courseMap={Object.fromEntries(
+              (enrollments || []).filter((e) => e.course).map((e) => [e.course.id, e.course.title])
+            )}
+          />
         </div>
 
         <TrainerRequestBox
