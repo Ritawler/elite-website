@@ -5,9 +5,19 @@ import Header from "@/components/Header";
 export default async function AdminPanel() {
   const supabase = await createClient();
 
-  const { data: users } = await supabase.from("users").select("role");
-  const { data: enrollments } = await supabase.from("enrollments").select("course_id, amount_paid");
-  const { data: courses } = await supabase.from("courses").select("id, title");
+  const { data: { user } } = await supabase.auth.getUser();
+
+  const [
+    { data: users },
+    { data: enrollments },
+    { data: courses },
+    { data: certificates },
+  ] = await Promise.all([
+    supabase.from("users").select("role"),
+    supabase.from("enrollments").select("course_id, amount_paid"),
+    supabase.from("courses").select("id, title"),
+    supabase.from("certificates").select("id, course_id, certificate_url, issued_at").eq("student_id", user.id),
+  ]);
 
   const usersByRole = { student: 0, trainer: 0, admin: 0 };
   for (const u of users || []) {
@@ -65,6 +75,36 @@ export default async function AdminPanel() {
                   </span>
                 </div>
               ))}
+            </div>
+          )}
+        </div>
+
+        <div className="dash-section">
+          <h2>شهاداتي</h2>
+          {!certificates || certificates.length === 0 ? (
+            <p className="dash-empty">ما عندك شهادات صادرة بعد.</p>
+          ) : (
+            <div className="dashboard-card">
+              {certificates.map((cert) => {
+                const courseTitle = courses?.find((c) => c.id === cert.course_id)?.title || "دورة";
+                return (
+                  <div className="cert-item" key={cert.id}>
+                    <span>{courseTitle}</span>
+                    {cert.certificate_url ? (
+                      <a
+                        href={cert.certificate_url}
+                        target="_blank"
+                        rel="noopener"
+                        className="btn btn-outline"
+                      >
+                        تحميل الشهادة
+                      </a>
+                    ) : (
+                      <span className="cert-pending">قيد الإصدار</span>
+                    )}
+                  </div>
+                );
+              })}
             </div>
           )}
         </div>
