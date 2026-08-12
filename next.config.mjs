@@ -5,12 +5,12 @@ const nextConfig = {
   // without this, next/@vercel/nft's static tracing can miss files that
   // puppeteer-core/@sparticuz/chromium only reference at runtime.
   outputFileTracingIncludes: {
+    // chromium-min downloads its binary at runtime from CDN — no need to bundle it.
+    // We only need to include the fonts and certificate assets that are read from disk.
     "/api/notes/pdf": [
-      "./node_modules/@sparticuz/chromium/**",
       "./src/fonts/**",
     ],
     "/api/lessons/[lessonId]/complete": [
-      "./node_modules/@sparticuz/chromium/**",
       "./src/fonts/**",
       "./public/certificate-assets/**",
     ],
