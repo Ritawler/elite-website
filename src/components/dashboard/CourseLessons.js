@@ -109,6 +109,7 @@ export default function CourseLessons({ lessons, initialCompletedIds = [] }) {
                     checked={isCompleted}
                     disabled={!canMarkComplete || isCompleted || markingId === lesson.id}
                     onChange={() => markComplete(lesson.id)}
+                    style={{ accentColor: isCompleted ? "#87C781" : undefined, width: 16, height: 16 }}
                   />
                   أنهيت مشاهدة هذا الدرس
                 </label>
