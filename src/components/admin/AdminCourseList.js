@@ -174,22 +174,24 @@ function AddCourseForm({ onAdded }) {
     setLoading(true);
     setError("");
 
-    const { data: inserted, error: insertErr } = await supabase
-      .from("courses")
-      .insert({
+    const res = await fetch("/api/admin/courses", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
         title: title.trim(),
         description: description.trim() || null,
         price: Number(price) || 0,
         trainer_id: trainerId || null,
         is_published: isPublished,
-      })
-      .select("id, title, description, price, discount_price, is_published, trainer_signature_url, trainer:users(full_name, email)")
-      .single();
+      }),
+    });
 
+    const json = await res.json();
     setLoading(false);
-    if (insertErr) { setError(insertErr.message); return; }
 
-    onAdded(inserted);
+    if (!res.ok) { setError(json.error || "حدث خطأ أثناء الحفظ."); return; }
+
+    onAdded(json.course);
     setTitle(""); setDescription(""); setPrice(""); setTrainerId(""); setIsPublished(false);
     setOpen(false);
   }
