@@ -108,14 +108,23 @@ export async function POST(request, { params }) {
   const dayName = days[now.getDay()];
   const dateText = `${now.getFullYear()}/${String(now.getMonth()+1).padStart(2,"0")}/${String(now.getDate()).padStart(2,"0")}`;
 
-  const pdfBuffer = await generateCertificatePdf({
-    studentName,
-    courseName: course.title,
-    trainerName: trainerProfile?.full_name || "",
-    dayName,
-    dateText,
-    gender: profile?.gender,
-  });
+  let pdfBuffer;
+  try {
+    pdfBuffer = await generateCertificatePdf({
+      studentName,
+      courseName: course.title,
+      trainerName: trainerProfile?.full_name || "",
+      dayName,
+      dateText,
+      gender: profile?.gender,
+    });
+  } catch (pdfErr) {
+    console.error("[certificate] PDF generation failed:", pdfErr);
+    return NextResponse.json(
+      { completed: true, certificateIssued: false, error: "فشل إنشاء ملف الشهادة — يرجى المحاولة لاحقاً" },
+      { status: 500 }
+    );
+  }
 
   const filePath = `${user.id}/${lesson.course_id}.pdf`;
   const { error: uploadError } = await admin.storage
@@ -123,19 +132,31 @@ export async function POST(request, { params }) {
     .upload(filePath, pdfBuffer, { contentType: "application/pdf", upsert: true });
 
   if (uploadError) {
-    return NextResponse.json({ completed: true, certificateIssued: false, error: "تعذّر رفع الشهادة" });
+    console.error("[certificate] Storage upload failed:", uploadError);
+    return NextResponse.json(
+      { completed: true, certificateIssued: false, error: "فشل رفع الشهادة للتخزين" },
+      { status: 500 }
+    );
   }
 
   const {
     data: { publicUrl },
   } = admin.storage.from("certificates").getPublicUrl(filePath);
 
-  await admin
+  const { error: dbError } = await admin
     .from("certificates")
     .upsert(
       { student_id: user.id, course_id: lesson.course_id, certificate_url: publicUrl },
       { onConflict: "student_id,course_id" }
     );
+
+  if (dbError) {
+    console.error("[certificate] DB upsert failed:", dbError);
+    return NextResponse.json(
+      { completed: true, certificateIssued: false, error: "فشل تسجيل الشهادة بقاعدة البيانات" },
+      { status: 500 }
+    );
+  }
 
   return NextResponse.json({ completed: true, certificateIssued: true });
 }

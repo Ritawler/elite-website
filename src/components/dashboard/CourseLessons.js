@@ -78,9 +78,15 @@ export default function CourseLessons({ lessons, initialCompletedIds = [] }) {
   async function markComplete(lessonId) {
     setMarkingId(lessonId);
     const res = await fetch(`/api/lessons/${lessonId}/complete`, { method: "POST" });
+    const json = await res.json().catch(() => ({}));
     setMarkingId(null);
-    if (res.ok) {
+    if (res.ok || json.completed) {
       setCompletedIds((prev) => new Set(prev).add(lessonId));
+    }
+    if (json.certificateIssued) {
+      setError("🎉 تهانينا! تم إصدار شهادتك. يمكنك تحميلها من قسم 'شهاداتي'.");
+    } else if (json.error && !json.certificateIssued && json.completed) {
+      setError(`تعذّر إصدار الشهادة: ${json.error}`);
     }
   }
 
