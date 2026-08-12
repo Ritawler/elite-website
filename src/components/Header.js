@@ -90,7 +90,7 @@ export default function Header() {
               </a>
             </li>
             <li>
-              <a href="/#courses" className="nav-link" data-ar="الدورات" data-en="Courses">
+              <a href="/courses" className="nav-link" data-ar="الدورات" data-en="Courses">
                 الدورات
               </a>
             </li>

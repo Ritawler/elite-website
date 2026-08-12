@@ -194,15 +194,13 @@ export const homeSectionsTop = `
     </div>
 
     <div class="soon-card reveal">
-      <div class="soon-badge" data-ar="قريباً" data-en="Coming Soon">قريباً</div>
       <div class="soon-icon" aria-hidden="true">
         <svg viewBox="0 0 24 24"><path d="M12 2 2 7v6c0 5 4 8 10 9 6-1 10-4 10-9V7l-10-5Zm-1 13-4-4 1.4-1.4L11 12.2l4.6-4.6L17 9l-6 6Z"/></svg>
       </div>
-      <h3 data-ar="نُجهّز لكم باقة دورات متخصصة" data-en="We're Preparing a Specialized Course Lineup">نُجهّز لكم باقة دورات متخصصة</h3>
-      <p data-ar="نعمل حالياً على إعداد باقة متكاملة من الدورات التدريبية المتخصصة في علم النفس والتربية والتطوير الذاتي، بمعايير علمية دقيقة واعتماد مهني موثوق. تابعونا قريباً!" data-en="We are currently preparing a comprehensive lineup of specialized training courses in psychology, education, and personal development — built on rigorous scientific standards and trusted professional accreditation. Stay tuned!">نعمل حالياً على إعداد باقة متكاملة من الدورات التدريبية المتخصصة في علم النفس والتربية والتطوير الذاتي، بمعايير علمية دقيقة واعتماد مهني موثوق. تابعونا قريباً!</p>
-      <a href="https://wa.me/96566676092?text=%D9%85%D8%B1%D8%AD%D8%A8%D8%A7%D8%8C%20%D8%A3%D8%B1%D8%BA%D8%A8%20%D8%A8%D8%A7%D9%84%D8%AA%D8%B3%D8%AC%D9%8A%D9%84%20%D9%88%D9%85%D8%B9%D8%B1%D9%81%D8%A9%20%D8%A7%D9%84%D9%85%D8%B2%D9%8A%D8%AF%20%D8%B9%D9%86%20%D8%A7%D9%84%D8%AF%D9%88%D8%B1%D8%A7%D8%AA%20%D8%A7%D9%84%D9%82%D8%A7%D8%AF%D9%85%D8%A9." data-wa-base="https://wa.me/96566676092" data-msg-ar="مرحباً، أرغب بالتسجيل ومعرفة المزيد عن الدورات القادمة." data-msg-en="Hello, I'd like to register my interest and learn more about upcoming courses." target="_blank" rel="noopener" class="btn btn-secondary">
-        <svg class="icon-inline" viewBox="0 0 24 24" aria-hidden="true"><path d="M20.5 3.5A11 11 0 0 0 3 17.4L2 22l4.7-1.2A11 11 0 1 0 20.5 3.5Zm-8.5 17a9 9 0 0 1-4.6-1.3l-.3-.2-3 .8.8-2.9-.2-.3A9 9 0 1 1 12 20.5Zm5-6.7c-.3-.1-1.6-.8-1.8-.9-.2-.1-.4-.1-.6.1-.2.3-.7.9-.8 1-.2.2-.3.2-.5.1-.3-.1-1.2-.4-2.2-1.4-.8-.7-1.4-1.6-1.5-1.9-.2-.3 0-.5.1-.6l.4-.5c.1-.2.2-.3.2-.5.1-.2 0-.4 0-.5-.1-.1-.6-1.5-.8-2-.2-.5-.4-.4-.6-.4h-.5c-.2 0-.5.1-.7.3-.2.3-.9.9-.9 2.2s1 2.5 1.1 2.7c.1.2 2 3.1 4.9 4.3.7.3 1.2.5 1.6.6.7.2 1.3.2 1.8.1.5-.1 1.6-.7 1.9-1.3.2-.6.2-1.1.2-1.3-.1-.1-.3-.2-.5-.3Z"/></svg>
-        <span data-ar="سجّل اهتمامك عبر واتساب" data-en="Register Your Interest via WhatsApp">سجّل اهتمامك عبر واتساب</span>
+      <h3 data-ar="دوراتنا التدريبية المتخصصة" data-en="Our Specialized Training Courses">دوراتنا التدريبية المتخصصة</h3>
+      <p data-ar="باقة متكاملة من الدورات في علم النفس والتربية والتطوير الذاتي، بمعايير علمية دقيقة واعتماد مهني موثوق." data-en="A comprehensive lineup of specialized training courses in psychology, education, and personal development — built on rigorous scientific standards and trusted professional accreditation.">باقة متكاملة من الدورات في علم النفس والتربية والتطوير الذاتي، بمعايير علمية دقيقة واعتماد مهني موثوق.</p>
+      <a href="/courses" class="btn btn-primary">
+        <span data-ar="عرض جميع الدورات" data-en="View All Courses">عرض جميع الدورات</span>
       </a>
     </div>
   </div>
