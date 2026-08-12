@@ -2,6 +2,8 @@ import { createClient } from "@/lib/supabase/server";
 import Header from "@/components/Header";
 import BuyCourseButton from "@/components/BuyCourseButton";
 
+export const dynamic = "force-dynamic";
+
 export default async function CoursesPage() {
   const supabase = await createClient();
 
