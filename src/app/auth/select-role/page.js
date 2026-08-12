@@ -1,70 +1,42 @@
-"use client";
+import { redirect } from "next/navigation";
+import { createClient } from "@/lib/supabase/server";
+import SelectRoleForm from "./SelectRoleForm";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { createClient } from "@/lib/supabase/client";
+const DASHBOARD_BY_ROLE = {
+  admin: "/control-panel-2026",
+  staff: "/dashboard/staff",
+  trainer: "/dashboard/trainer",
+  student: "/dashboard/student",
+};
 
-export default function SelectRolePage() {
-  const router = useRouter();
-  const supabase = createClient();
-  const [role, setRole] = useState("student");
-  const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
+export default async function SelectRolePage() {
+  const supabase = await createClient();
 
-  async function handleConfirm() {
-    setLoading(true);
-    setError("");
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect("/login");
 
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
+  const { data: profile } = await supabase
+    .from("users")
+    .select("role, role_selected")
+    .eq("id", user.id)
+    .single();
 
-    const { error } = await supabase
-      .from("users")
-      .update({ role, role_selected: true })
-      .eq("id", user.id);
-
-    if (error) {
-      setError("تعذّر حفظ الاختيار. حاول مرة أخرى.");
-      setLoading(false);
-      return;
+  // Already has a privileged role — mark as selected and redirect immediately.
+  if (["admin", "staff", "trainer"].includes(profile?.role)) {
+    if (!profile.role_selected) {
+      await supabase
+        .from("users")
+        .update({ role_selected: true })
+        .eq("id", user.id);
     }
-
-    router.push(`/dashboard/${role}`);
+    redirect(DASHBOARD_BY_ROLE[profile.role]);
   }
 
-  return (
-    <div className="auth-wrap">
-      <div className="auth-card">
-        <h1>اختر نوع حسابك</h1>
-        <p className="auth-subtitle">هذه الخطوة الأخيرة قبل الدخول للمنصة</p>
+  // Already chose their role before — send to dashboard.
+  if (profile?.role_selected) {
+    redirect(DASHBOARD_BY_ROLE[profile?.role] ?? "/dashboard/student");
+  }
 
-        {error && <div className="auth-error">{error}</div>}
-
-        <div className="role-choice">
-          <div
-            className={`role-option ${role === "student" ? "selected" : ""}`}
-            onClick={() => setRole("student")}
-          >
-            متدرّب (Student)
-          </div>
-          <div
-            className={`role-option ${role === "trainer" ? "selected" : ""}`}
-            onClick={() => setRole("trainer")}
-          >
-            مدرّب (Trainer)
-          </div>
-        </div>
-
-        <button
-          type="button"
-          className="btn btn-primary auth-submit"
-          onClick={handleConfirm}
-          disabled={loading}
-        >
-          {loading ? "جارٍ الحفظ..." : "متابعة"}
-        </button>
-      </div>
-    </div>
-  );
+  // New user with no role yet — show the selection form.
+  return <SelectRoleForm />;
 }
