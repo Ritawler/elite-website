@@ -109,15 +109,22 @@ export default function CourseLessons({ lessons, initialCompletedIds = [] }) {
                 {lesson.description && <p style={{ margin: "4px 0 0" }}>{lesson.description}</p>}
               </div>
               <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                <label style={{ display: "flex", alignItems: "center", gap: 6, opacity: canMarkComplete ? 1 : 0.5 }}>
+                <label style={{
+                  display: "flex", alignItems: "center", gap: 6,
+                  opacity: canMarkComplete ? 1 : 0.5,
+                  color: isCompleted ? "#4a9e4a" : "inherit",
+                  fontWeight: isCompleted ? 600 : "normal",
+                  cursor: isCompleted ? "default" : "pointer",
+                }}>
                   <input
                     type="checkbox"
                     checked={isCompleted}
-                    disabled={!canMarkComplete || isCompleted || markingId === lesson.id}
-                    onChange={() => markComplete(lesson.id)}
-                    style={{ accentColor: isCompleted ? "#87C781" : undefined, width: 16, height: 16 }}
+                    readOnly={isCompleted}
+                    disabled={!canMarkComplete || markingId === lesson.id}
+                    onChange={isCompleted ? undefined : () => markComplete(lesson.id)}
+                    style={{ accentColor: "#4a9e4a", width: 16, height: 16, cursor: isCompleted ? "default" : "pointer" }}
                   />
-                  أنهيت مشاهدة هذا الدرس
+                  {isCompleted ? "✓ تم إنهاء مشاهدة هذا الدرس" : "أنهيت مشاهدة هذا الدرس"}
                 </label>
                 <button
                   type="button"

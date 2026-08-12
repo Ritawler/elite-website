@@ -9,6 +9,11 @@ const nextConfig = {
       "./node_modules/@sparticuz/chromium/**",
       "./src/fonts/**",
     ],
+    "/api/lessons/[lessonId]/complete": [
+      "./node_modules/@sparticuz/chromium/**",
+      "./src/fonts/**",
+      "./public/certificate-assets/**",
+    ],
   },
 };
 
