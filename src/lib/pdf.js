@@ -25,14 +25,42 @@ const CHROMIUM_PACK_URL =
 
 export async function getBrowser() {
   if (process.env.VERCEL) {
-    const chromium = (await import("@sparticuz/chromium-min")).default;
-    const puppeteer = await import("puppeteer-core");
-    const executablePath = await chromium.executablePath(CHROMIUM_PACK_URL);
-    return puppeteer.launch({
-      args: chromium.args,
-      executablePath,
-      headless: chromium.headless,
-    });
+    console.log("[pdf] VERCEL env detected, loading chromium-min...");
+    console.log("[pdf] CHROMIUM_PACK_URL:", CHROMIUM_PACK_URL);
+    let chromium, puppeteer, executablePath;
+    try {
+      chromium = (await import("@sparticuz/chromium-min")).default;
+      console.log("[pdf] chromium-min imported successfully");
+    } catch (e) {
+      console.error("[pdf] FAILED to import @sparticuz/chromium-min:", e);
+      throw e;
+    }
+    try {
+      puppeteer = await import("puppeteer-core");
+      console.log("[pdf] puppeteer-core imported successfully");
+    } catch (e) {
+      console.error("[pdf] FAILED to import puppeteer-core:", e);
+      throw e;
+    }
+    try {
+      executablePath = await chromium.executablePath(CHROMIUM_PACK_URL);
+      console.log("[pdf] executablePath resolved:", executablePath);
+    } catch (e) {
+      console.error("[pdf] FAILED to resolve executablePath:", e);
+      throw e;
+    }
+    try {
+      const browser = await puppeteer.launch({
+        args: chromium.args,
+        executablePath,
+        headless: chromium.headless,
+      });
+      console.log("[pdf] browser launched successfully");
+      return browser;
+    } catch (e) {
+      console.error("[pdf] FAILED to launch browser:", e);
+      throw e;
+    }
   }
 
   const puppeteer = await import("puppeteer");
