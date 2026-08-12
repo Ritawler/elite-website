@@ -1,4 +1,4 @@
-export const homeSectionsTop = `
+export const homeSectionsPreCourses = `
 <!-- ===== Hero / Home ===== -->
 <section class="hero" id="home">
   <div class="hero-bg" aria-hidden="true"></div>
@@ -184,28 +184,9 @@ export const homeSectionsTop = `
     </div><!-- /org-chart -->
   </div>
 </section>
+`;
 
-<!-- ===== Courses (Coming Soon) ===== -->
-<section class="section" id="courses">
-  <div class="container">
-    <div class="section-head reveal">
-      <span class="tag" data-ar="برامجنا التدريبية" data-en="Our Training Programs">برامجنا التدريبية</span>
-      <h2 data-ar="الدورات التدريبية" data-en="Training Courses">الدورات التدريبية</h2>
-    </div>
-
-    <div class="soon-card reveal">
-      <div class="soon-icon" aria-hidden="true">
-        <svg viewBox="0 0 24 24"><path d="M12 2 2 7v6c0 5 4 8 10 9 6-1 10-4 10-9V7l-10-5Zm-1 13-4-4 1.4-1.4L11 12.2l4.6-4.6L17 9l-6 6Z"/></svg>
-      </div>
-      <h3 data-ar="دوراتنا التدريبية المتخصصة" data-en="Our Specialized Training Courses">دوراتنا التدريبية المتخصصة</h3>
-      <p data-ar="باقة متكاملة من الدورات في علم النفس والتربية والتطوير الذاتي، بمعايير علمية دقيقة واعتماد مهني موثوق." data-en="A comprehensive lineup of specialized training courses in psychology, education, and personal development — built on rigorous scientific standards and trusted professional accreditation.">باقة متكاملة من الدورات في علم النفس والتربية والتطوير الذاتي، بمعايير علمية دقيقة واعتماد مهني موثوق.</p>
-      <a href="/courses" class="btn btn-primary">
-        <span data-ar="عرض جميع الدورات" data-en="View All Courses">عرض جميع الدورات</span>
-      </a>
-    </div>
-  </div>
-</section>
-
+export const homeSectionsPostCourses = `
 <!-- ===== CPD ===== -->
 <section class="section section-alt" id="cpd">
   <div class="container">

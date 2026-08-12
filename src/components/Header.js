@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import SearchBar from "@/components/SearchBar";
 
 export default function Header() {
   const router = useRouter();
@@ -126,6 +127,8 @@ export default function Header() {
             </li>
           </ul>
         </nav>
+
+        <SearchBar />
 
         <div className="header-actions">
           {user === undefined ? null : user ? (
