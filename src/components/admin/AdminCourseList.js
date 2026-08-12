@@ -142,6 +142,152 @@ function CourseRow({ course, onDeleted }) {
   );
 }
 
+function AddCourseForm({ onAdded }) {
+  const supabase = createClient();
+  const [open, setOpen] = useState(false);
+  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
+  const [price, setPrice] = useState("");
+  const [trainerId, setTrainerId] = useState("");
+  const [isPublished, setIsPublished] = useState(false);
+  const [trainers, setTrainers] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  async function loadTrainers() {
+    const { data } = await supabase
+      .from("users")
+      .select("id, full_name, email")
+      .eq("role", "trainer")
+      .order("full_name");
+    setTrainers(data || []);
+  }
+
+  function handleOpen() {
+    setOpen(true);
+    loadTrainers();
+  }
+
+  async function handleSubmit(e) {
+    e.preventDefault();
+    if (!title.trim()) { setError("اسم الدورة مطلوب."); return; }
+    setLoading(true);
+    setError("");
+
+    const { data: inserted, error: insertErr } = await supabase
+      .from("courses")
+      .insert({
+        title: title.trim(),
+        description: description.trim() || null,
+        price: Number(price) || 0,
+        trainer_id: trainerId || null,
+        is_published: isPublished,
+      })
+      .select("id, title, description, price, discount_price, is_published, trainer_signature_url, trainer:users(full_name, email)")
+      .single();
+
+    setLoading(false);
+    if (insertErr) { setError(insertErr.message); return; }
+
+    onAdded(inserted);
+    setTitle(""); setDescription(""); setPrice(""); setTrainerId(""); setIsPublished(false);
+    setOpen(false);
+  }
+
+  if (!open) {
+    return (
+      <button className="btn btn-primary" onClick={handleOpen} style={{ marginBottom: 24 }}>
+        + إضافة دورة جديدة
+      </button>
+    );
+  }
+
+  return (
+    <div className="course-card-dash" style={{ marginBottom: 24, borderColor: "var(--primary)", borderWidth: 2 }}>
+      <h3 style={{ marginBottom: 16 }}>إضافة دورة جديدة</h3>
+      <form onSubmit={handleSubmit}>
+        <div className="form-row">
+          <label className="form-label">
+            اسم الدورة *
+            <input
+              className="form-input"
+              type="text"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder="مثال: مقدمة في علم النفس التربوي"
+              required
+            />
+          </label>
+        </div>
+        <div className="form-row">
+          <label className="form-label">
+            وصف الدورة
+            <textarea
+              className="form-input"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              placeholder="نبذة عن محتوى الدورة..."
+              rows={3}
+              style={{ resize: "vertical" }}
+            />
+          </label>
+        </div>
+        <div className="new-course-row" style={{ marginBottom: 12 }}>
+          <label className="form-label" style={{ flex: 1 }}>
+            السعر (د.ك)
+            <input
+              className="form-input"
+              type="number"
+              min="0"
+              step="0.01"
+              value={price}
+              onChange={(e) => setPrice(e.target.value)}
+              placeholder="0.000"
+            />
+          </label>
+          <label className="form-label" style={{ flex: 1 }}>
+            المدرّب
+            <select
+              className="form-input"
+              value={trainerId}
+              onChange={(e) => setTrainerId(e.target.value)}
+            >
+              <option value="">— بدون مدرّب —</option>
+              {trainers.map((t) => (
+                <option key={t.id} value={t.id}>
+                  {t.full_name || t.email}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="checkbox-row" style={{ alignSelf: "flex-end", paddingBottom: 8 }}>
+            <input
+              type="checkbox"
+              checked={isPublished}
+              onChange={(e) => setIsPublished(e.target.checked)}
+            />
+            نشر الدورة فوراً
+          </label>
+        </div>
+        {error && <p style={{ color: "red", margin: "8px 0" }}>{error}</p>}
+        <div className="new-course-row" style={{ marginTop: 8 }}>
+          <button className="btn btn-primary" type="submit" disabled={loading}>
+            {loading ? "جارٍ الحفظ..." : "حفظ الدورة"}
+          </button>
+          <button
+            className="btn btn-outline"
+            type="button"
+            onClick={() => setOpen(false)}
+            disabled={loading}
+          >
+            إلغاء
+          </button>
+        </div>
+      </form>
+    </div>
+  );
+}
+
 export default function AdminCourseList({ initialCourses }) {
   const [courses, setCourses] = useState(initialCourses);
 
@@ -149,15 +295,20 @@ export default function AdminCourseList({ initialCourses }) {
     setCourses((prev) => prev.filter((c) => c.id !== id));
   }
 
-  if (courses.length === 0) {
-    return <p className="dash-empty">ما فيه دورات بالمنصة بعد.</p>;
+  function handleAdded(course) {
+    setCourses((prev) => [course, ...prev]);
   }
 
   return (
     <div>
-      {courses.map((course) => (
-        <CourseRow key={course.id} course={course} onDeleted={handleDeleted} />
-      ))}
+      <AddCourseForm onAdded={handleAdded} />
+      {courses.length === 0 ? (
+        <p className="dash-empty">ما فيه دورات بالمنصة بعد.</p>
+      ) : (
+        courses.map((course) => (
+          <CourseRow key={course.id} course={course} onDeleted={handleDeleted} />
+        ))
+      )}
     </div>
   );
 }
