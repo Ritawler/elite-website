@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import Header from "@/components/Header";
 import BuyCourseButton from "@/components/BuyCourseButton";
@@ -9,7 +10,7 @@ export default async function CoursesPage() {
 
   const { data: courses } = await supabase
     .from("courses")
-    .select("id, title, description, price, discount_price")
+    .select("id, title, description, price, discount_price, image_url")
     .eq("is_published", true)
     .order("created_at", { ascending: false });
 
@@ -24,39 +25,42 @@ export default async function CoursesPage() {
           {!courses || courses.length === 0 ? (
             <p className="dash-empty">ما فيه دورات منشورة حالياً.</p>
           ) : (
-            courses.map((course) => {
-              const hasDiscount =
-                course.discount_price !== null && course.discount_price < course.price;
-              return (
-                <div className="course-card-dash" key={course.id}>
-                  <div className="course-card-dash-head">
-                    <div>
-                      <h3>{course.title}</h3>
-                      <p>{course.description}</p>
-                    </div>
-                    <div style={{ textAlign: "left" }}>
-                      {hasDiscount ? (
-                        <>
-                          <div style={{ textDecoration: "line-through", color: "var(--text-muted)" }}>
-                            {course.price} د.ك
-                          </div>
-                          <div style={{ fontWeight: 800, color: "var(--primary-dark)" }}>
-                            {course.discount_price} د.ك
-                          </div>
-                        </>
-                      ) : (
-                        <div style={{ fontWeight: 800, color: "var(--primary-dark)" }}>
-                          {course.price} د.ك
-                        </div>
+            <div className="home-courses-grid">
+              {courses.map((course) => {
+                const hasDiscount =
+                  course.discount_price !== null && course.discount_price < course.price;
+                return (
+                  <div className="home-course-card" key={course.id}>
+                    {course.image_url && (
+                      <Link href={`/courses/${course.id}`}>
+                        <img src={course.image_url} alt={course.title} className="course-cover-img" />
+                      </Link>
+                    )}
+                    <div className="home-course-card-body">
+                      <Link href={`/courses/${course.id}`} className="home-course-title-link">
+                        <h3 className="home-course-title">{course.title}</h3>
+                      </Link>
+                      {course.description && (
+                        <p className="home-course-desc">{course.description}</p>
                       )}
                     </div>
+                    <div className="home-course-card-footer">
+                      <div className="home-course-price">
+                        {hasDiscount ? (
+                          <>
+                            <span className="price-old">{course.price} د.ك</span>
+                            <span className="price-new">{course.discount_price} د.ك</span>
+                          </>
+                        ) : (
+                          <span className="price-new">{course.price} د.ك</span>
+                        )}
+                      </div>
+                      <BuyCourseButton courseId={course.id} />
+                    </div>
                   </div>
-                  <div style={{ marginTop: 14 }}>
-                    <BuyCourseButton courseId={course.id} />
-                  </div>
-                </div>
-              );
-            })
+                );
+              })}
+            </div>
           )}
         </div>
       </div>

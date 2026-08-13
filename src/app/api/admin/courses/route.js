@@ -36,7 +36,7 @@ export async function POST(request) {
       trainer_id: trainer_id || null,
       is_published: Boolean(is_published),
     })
-    .select("id, title, description, price, discount_price, is_published, trainer_signature_url, trainer:users(full_name, email)")
+    .select("id, title, description, price, discount_price, is_published, image_url, trainer_signature_url, trainer:users(full_name, email)")
     .single();
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });

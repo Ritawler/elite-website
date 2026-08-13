@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import BuyCourseButton from "@/components/BuyCourseButton";
 
 export default function CoursesSection({ courses }) {
@@ -29,8 +30,19 @@ export default function CoursesSection({ courses }) {
                 course.discount_price < course.price;
               return (
                 <div className="home-course-card reveal" key={course.id}>
+                  {course.image_url && (
+                    <Link href={`/courses/${course.id}`}>
+                      <img
+                        src={course.image_url}
+                        alt={course.title}
+                        className="course-cover-img"
+                      />
+                    </Link>
+                  )}
                   <div className="home-course-card-body">
-                    <h3 className="home-course-title">{course.title}</h3>
+                    <Link href={`/courses/${course.id}`} className="home-course-title-link">
+                      <h3 className="home-course-title">{course.title}</h3>
+                    </Link>
                     {course.description && (
                       <p className="home-course-desc">{course.description}</p>
                     )}
