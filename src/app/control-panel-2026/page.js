@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import Header from "@/components/Header";
 import CourseLessons from "@/components/dashboard/CourseLessons";
 import MyCertificatesList from "@/components/dashboard/MyCertificatesList";
+import AdminMessagingPanel from "@/components/admin/AdminMessagingPanel";
 
 export default async function AdminPanel() {
   const supabase = await createClient();
@@ -19,6 +20,19 @@ export default async function AdminPanel() {
     supabase.from("enrollments").select("course_id, amount_paid"),
     supabase.from("courses").select("id, title"),
   ]);
+
+  // Admin's messages (all conversations — where admin is sender OR receiver)
+  const { data: adminProfile } = await supabase
+    .from("users")
+    .select("full_name")
+    .eq("id", user.id)
+    .single();
+
+  const { data: adminMessages } = await supabase
+    .from("messages")
+    .select("*, sender:users!sender_id(full_name), receiver:users!receiver_id(full_name)")
+    .or(`sender_id.eq.${user.id},receiver_id.eq.${user.id}`)
+    .order("created_at", { ascending: true });
 
   // Admin's own enrollments + certificates
   const { data: myEnrollments } = await supabase
@@ -156,6 +170,16 @@ export default async function AdminPanel() {
         <div className="dash-section">
           <h2>شهاداتي</h2>
           <MyCertificatesList certificates={myCertificates} courseMap={courseMap} />
+        </div>
+
+        {/* Admin messaging */}
+        <div className="dash-section">
+          <h2>الرسائل</h2>
+          <AdminMessagingPanel
+            adminId={user.id}
+            adminName={adminProfile?.full_name || "الأدمن"}
+            initialMessages={adminMessages || []}
+          />
         </div>
 
         {/* Admin tools */}
