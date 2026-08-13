@@ -7,10 +7,7 @@ function buildConversations(messages, adminId) {
   const byPartner = new Map();
   for (const m of messages) {
     const partnerId = m.sender_id === adminId ? m.receiver_id : m.sender_id;
-    const partnerName =
-      m.sender_id === partnerId
-        ? (m.sender?.full_name || m.sender_name || "مستخدم")
-        : (m.receiver?.full_name || "مستخدم");
+    const partnerName = m._partnerName || m.sender_name || "مستخدم";
     if (!byPartner.has(partnerId)) {
       byPartner.set(partnerId, { partnerId, name: partnerName, messages: [] });
     }
@@ -76,13 +73,14 @@ export default function AdminMessagingPanel({ adminId, adminName, initialMessage
         sender_name: adminName,
         content: newText.trim(),
       })
-      .select("*, sender:users!sender_id(full_name), receiver:users!receiver_id(full_name)")
+      .select("*")
       .single();
 
     setNewLoading(false);
     if (error) { setNewError("تعذّر الإرسال: " + error.message); return; }
 
-    setMessages((prev) => [...prev, data]);
+    const receiverUser = users.find((u) => u.id === newReceiverId);
+    setMessages((prev) => [...prev, { ...data, _partnerName: receiverUser?.full_name || "مستخدم" }]);
     setSelectedPartnerId(newReceiverId);
     setNewText(""); setNewReceiverId(""); setShowNew(false);
   }
@@ -101,11 +99,14 @@ export default function AdminMessagingPanel({ adminId, adminName, initialMessage
         sender_name: adminName,
         content: text.trim(),
       })
-      .select("*, sender:users!sender_id(full_name), receiver:users!receiver_id(full_name)")
+      .select("*")
       .single();
 
     setLoading(false);
-    if (!error) { setMessages((prev) => [...prev, data]); setText(""); }
+    if (!error) {
+      setMessages((prev) => [...prev, { ...data, _partnerName: activeConvo.name }]);
+      setText("");
+    }
   }
 
   return (

@@ -28,11 +28,28 @@ export default async function AdminPanel() {
     .eq("id", user.id)
     .single();
 
-  const { data: adminMessages } = await supabase
+  const { data: rawMessages } = await supabase
     .from("messages")
-    .select("*, sender:users!sender_id(full_name), receiver:users!receiver_id(full_name)")
+    .select("*")
     .or(`sender_id.eq.${user.id},receiver_id.eq.${user.id}`)
     .order("created_at", { ascending: true });
+
+  // Collect all partner IDs then fetch their names from public.users
+  const partnerIds = [...new Set(
+    (rawMessages || []).map((m) =>
+      m.sender_id === user.id ? m.receiver_id : m.sender_id
+    )
+  )];
+  const { data: partnerUsers } = partnerIds.length
+    ? await supabase.from("users").select("id, full_name").in("id", partnerIds)
+    : { data: [] };
+  const nameById = Object.fromEntries((partnerUsers || []).map((u) => [u.id, u.full_name]));
+
+  // Attach partner name to each message so the client component can display it
+  const adminMessages = (rawMessages || []).map((m) => {
+    const partnerId = m.sender_id === user.id ? m.receiver_id : m.sender_id;
+    return { ...m, _partnerName: nameById[partnerId] || m.sender_name || "مستخدم" };
+  });
 
   // Admin's own enrollments + certificates
   const { data: myEnrollments } = await supabase
