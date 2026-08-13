@@ -2,8 +2,9 @@
 
 import { useEffect, useRef, useState } from "react";
 import Script from "next/script";
+import CourseRatingForm from "@/components/CourseRatingForm";
 
-export default function CourseLessons({ lessons, initialCompletedIds = [] }) {
+export default function CourseLessons({ lessons, initialCompletedIds = [], hasReviewed = false }) {
   const [openLessonId, setOpenLessonId] = useState(null);
   const [embedUrl, setEmbedUrl] = useState("");
   const [loadingId, setLoadingId] = useState(null);
@@ -11,6 +12,7 @@ export default function CourseLessons({ lessons, initialCompletedIds = [] }) {
   const [completedIds, setCompletedIds] = useState(new Set(initialCompletedIds));
   const [videoEndedIds, setVideoEndedIds] = useState(new Set());
   const [markingId, setMarkingId] = useState(null);
+  const [showRating, setShowRating] = useState(false);
 
   const iframeRef = useRef(null);
   const playerRef = useRef(null);
@@ -81,7 +83,12 @@ export default function CourseLessons({ lessons, initialCompletedIds = [] }) {
     const json = await res.json().catch(() => ({}));
     setMarkingId(null);
     if (res.ok || json.completed) {
-      setCompletedIds((prev) => new Set(prev).add(lessonId));
+      const next = new Set(completedIds).add(lessonId);
+      setCompletedIds(next);
+      // Show rating form once all lessons are done and user hasn't rated yet
+      if (!hasReviewed && lessons.length > 0 && lessons.every((l) => next.has(l.id))) {
+        setShowRating(true);
+      }
     }
     if (json.certificateIssued) {
       setError("🎉 تهانينا! تم إصدار شهادتك. يمكنك تحميلها من قسم 'شهاداتي'.");
@@ -91,6 +98,8 @@ export default function CourseLessons({ lessons, initialCompletedIds = [] }) {
   }
 
   if (lessons.length === 0) return null;
+
+  const courseId = lessons[0]?.course_id;
 
   return (
     <div style={{ marginTop: 14 }}>
@@ -152,6 +161,12 @@ export default function CourseLessons({ lessons, initialCompletedIds = [] }) {
           </div>
         );
       })}
+
+      {showRating && courseId && (
+        <div style={{ marginTop: 16 }}>
+          <CourseRatingForm courseId={courseId} onSubmitted={() => setShowRating(false)} />
+        </div>
+      )}
     </div>
   );
 }
