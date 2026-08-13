@@ -1,5 +1,6 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 import { checkPaymentStatus } from "@/lib/upayments";
+import { sendEnrollmentConfirmation, sendTrainerEnrollmentNotification } from "@/lib/email";
 
 // Confirms a payment and creates the enrollment. Called from two places:
 // the UPayments webhook (no user session), and the /payment/success page
@@ -46,7 +47,7 @@ export async function confirmPayment({ orderId, trackId }) {
     .update({ status: "paid", track_id: effectiveTrackId, updated_at: new Date().toISOString() })
     .eq("id", payment.id);
 
-  await admin
+  const { data: enrollResult } = await admin
     .from("enrollments")
     .upsert(
       {
@@ -56,7 +57,49 @@ export async function confirmPayment({ orderId, trackId }) {
         certificate_name: payment.certificate_name,
       },
       { onConflict: "student_id,course_id", ignoreDuplicates: true }
-    );
+    )
+    .select("enrolled_at")
+    .maybeSingle();
+
+  // Send confirmation emails (fire-and-forget — don't fail the payment if email fails)
+  try {
+    const [{ data: student }, { data: course }] = await Promise.all([
+      admin.from("users").select("full_name, email").eq("id", payment.student_id).single(),
+      admin.from("courses").select("title, trainer_id").eq("id", payment.course_id).single(),
+    ]);
+
+    const enrolledAt = enrollResult?.enrolled_at || new Date().toISOString();
+
+    if (student?.email) {
+      let trainerName = "فريق إيليت";
+      if (course?.trainer_id) {
+        const { data: trainer } = await admin.from("users").select("full_name").eq("id", course.trainer_id).single();
+        trainerName = trainer?.full_name || trainerName;
+      }
+      await sendEnrollmentConfirmation({
+        studentEmail: student.email,
+        studentName: student.full_name || student.email,
+        courseName: course?.title || "",
+        trainerName,
+        enrolledAt,
+      });
+    }
+
+    if (course?.trainer_id) {
+      const { data: trainer } = await admin.from("users").select("full_name, email").eq("id", course.trainer_id).single();
+      if (trainer?.email) {
+        await sendTrainerEnrollmentNotification({
+          trainerEmail: trainer.email,
+          trainerName: trainer.full_name || trainer.email,
+          studentName: student?.full_name || student?.email || "",
+          courseName: course?.title || "",
+          enrolledAt,
+        });
+      }
+    }
+  } catch (emailErr) {
+    console.error("[payments] Email notification failed:", emailErr);
+  }
 
   return { ok: true, alreadyProcessed: false, courseId: payment.course_id };
 }
