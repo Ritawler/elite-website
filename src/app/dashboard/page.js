@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 
 export default async function DashboardRedirect() {
   const supabase = await createClient();
@@ -15,7 +16,16 @@ export default async function DashboardRedirect() {
     .eq("id", user.id)
     .single();
 
-  if (!profile?.role_selected) redirect("/auth/select-role");
+  // Auto-assign student for new users (Google OAuth or unfinished registration)
+  if (!profile?.role_selected) {
+    const admin = createAdminClient();
+    await admin
+      .from("users")
+      .update({ role: "student", role_selected: true })
+      .eq("id", user.id);
+    redirect("/dashboard/student");
+  }
+
   if (profile.role === "admin") redirect("/control-panel-2026");
   redirect(`/dashboard/${profile.role}`);
 }

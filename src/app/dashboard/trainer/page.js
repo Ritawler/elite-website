@@ -1,7 +1,6 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import Header from "@/components/Header";
-import NewCourseForm from "@/components/dashboard/NewCourseForm";
 import MessageInbox from "@/components/dashboard/MessageInbox";
 
 export default async function TrainerDashboard() {
@@ -99,7 +98,6 @@ export default async function TrainerDashboard() {
             );
           })}
 
-          <NewCourseForm trainerId={user.id} />
         </div>
 
         <div className="dash-section">

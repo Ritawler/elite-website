@@ -13,6 +13,7 @@ export default function Header() {
   const [canReview, setCanReview] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
   const [canManageTopics, setCanManageTopics] = useState(false);
+  const [userRole, setUserRole] = useState(null);
 
   useEffect(() => {
     async function loadUser() {
@@ -27,6 +28,7 @@ export default function Header() {
         setCanReview(profile?.role === "admin" || profile?.can_approve_trainers === true);
         setIsAdmin(profile?.role === "admin");
         setCanManageTopics(profile?.role === "admin" || profile?.can_manage_member_topics === true);
+        setUserRole(profile?.role ?? null);
       } else {
         setCanReview(false);
         setIsAdmin(false);
@@ -149,7 +151,7 @@ export default function Header() {
                 </Link>
               )}
               <Link href="/dashboard" className="btn btn-outline login-btn">
-                {displayName}
+                {userRole === "student" ? "حسابي" : displayName}
               </Link>
               <button
                 type="button"

@@ -83,7 +83,7 @@ export default async function StudentDashboard() {
       <Header />
       <div className="dashboard-wrap">
         <h1>مرحباً {studentName} 👋</h1>
-        <p>لوحة تحكم المتدرّب</p>
+        <p>حسابي</p>
 
         <a href="/courses" className="btn btn-outline">
           تصفّح الدورات المتاحة

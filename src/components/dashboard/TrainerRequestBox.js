@@ -33,7 +33,7 @@ export default function TrainerRequestBox({ studentId, studentName, studentEmail
 
   return (
     <div className="dash-section">
-      <h2>تصير مدرّب؟</h2>
+      <h2>تبي تصير مدرب؟</h2>
       <div className="dashboard-card">
         {error && <div className="auth-error">{error}</div>}
 
@@ -48,7 +48,7 @@ export default function TrainerRequestBox({ studentId, studentName, studentEmail
 
         {request?.status === "pending" && (
           <p>
-            طلبك قيد المراجعة حالياً — بتوصلك ترقية تلقائية للوحة تحكم المدرّب أول ما توافق جهة مخوّلة.
+            طلبك قيد المراجعة حاليًا - سيتم التواصل معكم عند موافقة الجهة المخوَّلة
           </p>
         )}
 

@@ -12,14 +12,11 @@ export default function LoginPage() {
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [role, setRole] = useState("student");
+  const [phone, setPhone] = useState("");
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [loading, setLoading] = useState(false);
 
-  // Surfaces errors that /auth/callback redirects back with (e.g. Google
-  // sign-in failures) — temporary diagnostic, shows the raw message so we
-  // can see exactly where the OAuth flow breaks.
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const callbackError = params.get("error");
@@ -35,10 +32,17 @@ export default function LoginPage() {
       .eq("id", userId)
       .single();
 
+    // Auto-assign student for users who haven't gone through role selection
     if (!profile?.role_selected) {
-      router.push("/auth/select-role");
+      await supabase
+        .from("users")
+        .update({ role: "student", role_selected: true })
+        .eq("id", userId);
+      router.push("/dashboard/student");
       return;
     }
+
+    if (profile.role === "admin") { router.push("/control-panel-2026"); return; }
     router.push(`/dashboard/${profile.role}`);
   }
 
@@ -47,10 +51,7 @@ export default function LoginPage() {
     setError("");
     setLoading(true);
 
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
 
     if (error) {
       setError("البريد الإلكتروني أو كلمة المرور غير صحيحة.");
@@ -71,7 +72,7 @@ export default function LoginPage() {
       email,
       password,
       options: {
-        data: { full_name: fullName, role },
+        data: { full_name: fullName, role: "student", phone },
       },
     });
 
@@ -84,6 +85,14 @@ export default function LoginPage() {
       );
       setLoading(false);
       return;
+    }
+
+    // Save phone number to users table (column must exist — see SQL below)
+    if (data.user && phone) {
+      await supabase
+        .from("users")
+        .update({ phone, role: "student", role_selected: true })
+        .eq("id", data.user.id);
     }
 
     if (data.session) {
@@ -116,22 +125,14 @@ export default function LoginPage() {
           <button
             type="button"
             className={`auth-tab ${mode === "login" ? "active" : ""}`}
-            onClick={() => {
-              setMode("login");
-              setError("");
-              setSuccess("");
-            }}
+            onClick={() => { setMode("login"); setError(""); setSuccess(""); }}
           >
             تسجيل الدخول
           </button>
           <button
             type="button"
             className={`auth-tab ${mode === "register" ? "active" : ""}`}
-            onClick={() => {
-              setMode("register");
-              setError("");
-              setSuccess("");
-            }}
+            onClick={() => { setMode("register"); setError(""); setSuccess(""); }}
           >
             إنشاء حساب
           </button>
@@ -189,6 +190,17 @@ export default function LoginPage() {
               />
             </div>
             <div className="auth-field">
+              <label htmlFor="reg-phone">رقم الهاتف</label>
+              <input
+                id="reg-phone"
+                type="tel"
+                required
+                placeholder="مثال: 96512345678+"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+              />
+            </div>
+            <div className="auth-field">
               <label htmlFor="reg-password">كلمة المرور</label>
               <input
                 id="reg-password"
@@ -199,25 +211,6 @@ export default function LoginPage() {
                 onChange={(e) => setPassword(e.target.value)}
               />
             </div>
-
-            <div className="auth-field">
-              <label>نوع الحساب</label>
-              <div className="role-choice">
-                <div
-                  className={`role-option ${role === "student" ? "selected" : ""}`}
-                  onClick={() => setRole("student")}
-                >
-                  متدرّب (Student)
-                </div>
-                <div
-                  className={`role-option ${role === "trainer" ? "selected" : ""}`}
-                  onClick={() => setRole("trainer")}
-                >
-                  مدرّب (Trainer)
-                </div>
-              </div>
-            </div>
-
             <button type="submit" className="btn btn-primary auth-submit" disabled={loading}>
               {loading ? "جارٍ الإنشاء..." : "إنشاء حساب"}
             </button>
@@ -228,22 +221,10 @@ export default function LoginPage() {
 
         <button type="button" className="btn btn-outline google-btn" onClick={handleGoogle}>
           <svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true">
-            <path
-              fill="#4285F4"
-              d="M17.64 9.2c0-.64-.06-1.25-.16-1.84H9v3.48h4.84a4.14 4.14 0 0 1-1.8 2.72v2.26h2.92c1.7-1.57 2.68-3.88 2.68-6.62z"
-            />
-            <path
-              fill="#34A853"
-              d="M9 18c2.43 0 4.47-.8 5.96-2.18l-2.92-2.26c-.81.54-1.84.86-3.04.86-2.34 0-4.32-1.58-5.03-3.71H.98v2.33A9 9 0 0 0 9 18z"
-            />
-            <path
-              fill="#FBBC05"
-              d="M3.97 10.71A5.4 5.4 0 0 1 3.69 9c0-.6.1-1.18.28-1.71V4.96H.98A9 9 0 0 0 0 9c0 1.45.35 2.83.98 4.04l2.99-2.33z"
-            />
-            <path
-              fill="#EA4335"
-              d="M9 3.58c1.32 0 2.51.45 3.44 1.35l2.59-2.59C13.46.89 11.43 0 9 0A9 9 0 0 0 .98 4.96l2.99 2.33C4.68 5.16 6.66 3.58 9 3.58z"
-            />
+            <path fill="#4285F4" d="M17.64 9.2c0-.64-.06-1.25-.16-1.84H9v3.48h4.84a4.14 4.14 0 0 1-1.8 2.72v2.26h2.92c1.7-1.57 2.68-3.88 2.68-6.62z"/>
+            <path fill="#34A853" d="M9 18c2.43 0 4.47-.8 5.96-2.18l-2.92-2.26c-.81.54-1.84.86-3.04.86-2.34 0-4.32-1.58-5.03-3.71H.98v2.33A9 9 0 0 0 9 18z"/>
+            <path fill="#FBBC05" d="M3.97 10.71A5.4 5.4 0 0 1 3.69 9c0-.6.1-1.18.28-1.71V4.96H.98A9 9 0 0 0 0 9c0 1.45.35 2.83.98 4.04l2.99-2.33z"/>
+            <path fill="#EA4335" d="M9 3.58c1.32 0 2.51.45 3.44 1.35l2.59-2.59C13.46.89 11.43 0 9 0A9 9 0 0 0 .98 4.96l2.99 2.33C4.68 5.16 6.66 3.58 9 3.58z"/>
           </svg>
           المتابعة عبر Google
         </button>
