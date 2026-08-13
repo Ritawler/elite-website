@@ -68,7 +68,13 @@ export default function AdminPermissionsList({ initialUsers, departments }) {
     <div className="dashboard-card">
       {users.map((u) => (
         <div className="cert-item" key={u.id} style={{ flexWrap: "wrap", gap: 10 }}>
-          <span>{u.full_name || u.email}</span>
+          <div>
+            <div style={{ fontWeight: 600 }}>{u.full_name || u.email}</div>
+            <div style={{ fontSize: 12, color: "var(--text-muted)" }}>
+              {u.email}
+              {u.phone && <span> · {u.phone}</span>}
+            </div>
+          </div>
 
           <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
             <select

@@ -14,7 +14,7 @@ export default async function AdminPermissionsPage() {
 
   const { data: users } = await supabase
     .from("users")
-    .select("id, full_name, email, role, department_id, can_approve_trainers, can_manage_member_topics")
+    .select("id, full_name, email, phone, role, department_id, can_approve_trainers, can_manage_member_topics")
     .neq("role", "admin")
     .order("full_name", { ascending: true });
 
